@@ -1,13 +1,14 @@
-package com.github.jtjj222.sudburytransit;
+package com.github.jtjj222.sudburytransit.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.github.jtjj222.sudburytransit.maps.BusStopOverlay;
+import com.github.jtjj222.sudburytransit.maps.BusStopOverlayItem;
+import com.github.jtjj222.sudburytransit.R;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;

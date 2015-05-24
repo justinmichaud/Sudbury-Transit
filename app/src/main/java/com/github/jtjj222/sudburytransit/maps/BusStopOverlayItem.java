@@ -1,4 +1,4 @@
-package com.github.jtjj222.sudburytransit;
+package com.github.jtjj222.sudburytransit.maps;
 
 /**
  * Created by justin on 17/05/15.
