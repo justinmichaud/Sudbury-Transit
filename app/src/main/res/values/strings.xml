@@ -4,5 +4,7 @@
     <string name="app_name">Sudbury Transit</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_main">Sudbury Transit</string>
+    <string name="view_busses">View Buses</string>
+    <string name="close_popup">Close</string>
 
 </resources>

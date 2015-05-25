@@ -7,7 +7,7 @@ import java.util.Date;
  */
 public class Call {
 
-    public int route;
+    public String route;
     public Date passing_time;
     public Destination destination;
 

@@ -1,5 +1,8 @@
 package com.github.jtjj222.sudburytransit.models;
 
+import android.content.Context;
+import android.widget.Toast;
+
 import com.github.jtjj222.sudburytransit.R;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -12,6 +15,7 @@ import java.util.Date;
 
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
+import retrofit.RetrofitError;
 import retrofit.converter.GsonConverter;
 
 /**
@@ -27,6 +31,7 @@ public class MyBus {
                     @Override
                     public void intercept(RequestFacade request) {
                         request.addQueryParam("auth_token", api_key);
+                        System.out.println("Making request");
                     }
                 })
                 //Parse dates properly
@@ -50,6 +55,11 @@ public class MyBus {
                         .create()))
                 .build()
                 .create(MyBusService.class);
+    }
+
+    public static void onFailure(Context context, RetrofitError error) {
+        System.out.println("Failure: " + error.toString() + ". Url: " + error.getUrl());
+        Toast.makeText(context, "Could not fetch realtime data", Toast.LENGTH_SHORT).show();
     }
 
 }

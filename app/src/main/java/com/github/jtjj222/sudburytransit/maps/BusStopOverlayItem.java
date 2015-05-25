@@ -9,16 +9,19 @@ import org.osmdroid.views.overlay.OverlayItem;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 
+import com.github.jtjj222.sudburytransit.models.Stop;
+
 public class BusStopOverlayItem extends OverlayItem {
 
-    private String description;
+    private Stop stop;
 
-    public BusStopOverlayItem(String uid, String title, String description, GeoPoint location) {
-        super(uid, title, description, location);
-        this.description = description;
+    public BusStopOverlayItem(Stop stop) {
+        super("" + stop.number, stop.name,
+                "", new GeoPoint(stop.latitude, stop.longitude));
+        this.stop = stop;
     }
 
-    public String getDescription() {
-        return description;
+    public Stop getStop() {
+        return stop;
     }
 }

@@ -8,9 +8,13 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.github.jtjj222.sudburytransit.R;
+import com.github.jtjj222.sudburytransit.models.Call;
+import com.github.jtjj222.sudburytransit.models.Stop;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.api.IMapView;
@@ -20,6 +24,7 @@ import org.osmdroid.views.overlay.ItemizedOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created by justin on 17/05/15.
@@ -105,8 +110,16 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     }
 
     @Override
-    protected void draw(Canvas c, MapView mapView, boolean shadow) {
-        super.draw(c, mapView, shadow);
+    protected void draw(Canvas canvas, MapView mapView, boolean shadow) {
+        super.draw(canvas, mapView, shadow);
+
+        if (mPopupView != null && !shadow) {
+            canvas.save();
+            canvas.translate(popupX, popupY);
+            canvas.rotate(mapView.getMapOrientation());
+            mPopupView.draw(canvas);
+            canvas.restore();
+        }
     }
 
     protected void updatePopupView(final Context context, final BusStopOverlayItem item) {
@@ -115,7 +128,22 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         /* if (mPopupView == null) */ mPopupView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
             .inflate(R.layout.layout_bus_stop_overlay_item_details, null);
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());
-        ((TextView) mPopupView.findViewById(R.id.txtDescription)).setText(item.getDescription());
+        ((TextView) mPopupView.findViewById(R.id.txtStopNumber)).setText(""+item.getStop().number);
+
+        ((ListView) mPopupView.findViewById(R.id.listCalls)).setAdapter(new ArrayAdapter<Call>(context, -1, item.getStop().calls) {
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if (convertView == null) convertView = LayoutInflater.from(getContext())
+                        .inflate(R.layout.layout_bus_stop_overlay_call, parent, false);
+
+                Call call = getItem(position);
+                ((TextView) convertView.findViewById(R.id.txtRouteNumber)).setText(""+call.route);
+                ((TextView) convertView.findViewById(R.id.txtPassing)).setText(""
+                        + (call.passing_time.getTime() - Calendar.getInstance().getTime().getTime())/1000/60 + " Minutes");
+                ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To "+call.destination.name);
+
+                return convertView;
+            }
+        });
 
         mPopupView.findViewById(R.id.btnViewBusses).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -145,6 +173,8 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
         BusStopOverlayItem focusedItem = this.getFocus();
 
+        //If this is the focused item, update the position to draw the overlay
+        //If this is the first time since the focus changed, update the overlay too
         if (focusedItem != null && focusedItem.equals(item)) {
             if (focusChanged) {
                 focusChanged = false;
@@ -162,12 +192,6 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
             this.popupX = curScreenCoords.x  - mPopupView.getWidth()/2f;
             this.popupY = curScreenCoords.y;
-
-            canvas.save();
-            canvas.translate(popupX, popupY);
-            canvas.rotate(aMapOrientation);
-            mPopupView.draw(canvas);
-            canvas.restore();
         }
     }
 
