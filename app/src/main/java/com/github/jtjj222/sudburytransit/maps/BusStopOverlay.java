@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -169,8 +171,6 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     @Override
     protected void onDrawItem(Canvas canvas, BusStopOverlayItem item, Point curScreenCoords,
                               final float aMapOrientation) {
-        super.onDrawItem(canvas, item, curScreenCoords, aMapOrientation);
-
         BusStopOverlayItem focusedItem = this.getFocus();
 
         //If this is the focused item, update the position to draw the overlay
@@ -192,7 +192,12 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
             this.popupX = curScreenCoords.x  - mPopupView.getWidth()/2f;
             this.popupY = curScreenCoords.y;
+
+            item.setMarker(ContextCompat.getDrawable(context, R.drawable.ic_launcher));
         }
+        else item.setMarker(getDefaultMarker(0));
+
+        super.onDrawItem(canvas, item, curScreenCoords, aMapOrientation);
     }
 
     @Override
