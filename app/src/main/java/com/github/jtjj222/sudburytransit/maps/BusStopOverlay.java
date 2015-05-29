@@ -17,7 +17,10 @@ import android.widget.TextView;
 
 import com.github.jtjj222.sudburytransit.R;
 import com.github.jtjj222.sudburytransit.models.Call;
+import com.github.jtjj222.sudburytransit.models.MyBus;
+import com.github.jtjj222.sudburytransit.models.MyBusService;
 import com.github.jtjj222.sudburytransit.models.Stop;
+import com.github.jtjj222.sudburytransit.models.Stops;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.api.IMapView;
@@ -28,6 +31,10 @@ import org.osmdroid.views.overlay.OverlayItem;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 /**
  * Created by justin on 17/05/15.
@@ -103,22 +110,35 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         }
 
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());
-        ((TextView) mPopupView.findViewById(R.id.txtStopNumber)).setText(""+item.getStop().number);
+        ((TextView) mPopupView.findViewById(R.id.txtStopNumber)).setText("" + item.getStop().number);
 
-        ((ListView) mPopupView.findViewById(R.id.listCalls)).setAdapter(new ArrayAdapter<Call>(context, -1, item.getStop().calls) {
-            public View getView(int position, View convertView, ViewGroup parent) {
-                if (convertView == null) convertView = LayoutInflater.from(getContext())
-                        .inflate(R.layout.layout_bus_stop_overlay_call, parent, false);
+        MyBus.getService(context.getResources().getString(R.string.mybus_api_key))
+                .getStop(item.getStop().number, new Callback<Stops>() {
+                    @Override
+                    public void success(Stops stops, Response response) {
+                        ((ListView) mPopupView.findViewById(R.id.listCalls))
+                                .setAdapter(new ArrayAdapter<Call>(context, -1, stops.stop.calls) {
+                            public View getView(int position, View convertView, ViewGroup parent) {
+                                if (convertView == null)
+                                    convertView = LayoutInflater.from(getContext())
+                                            .inflate(R.layout.layout_bus_stop_overlay_call, parent, false);
 
-                Call call = getItem(position);
-                ((TextView) convertView.findViewById(R.id.txtRouteNumber)).setText(""+call.route);
-                ((TextView) convertView.findViewById(R.id.txtPassing)).setText(""
-                        + (call.passing_time.getTime() - Calendar.getInstance().getTime().getTime())/1000/60 + " Minutes");
-                ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To "+call.destination.name);
+                                Call call = getItem(position);
+                                ((TextView) convertView.findViewById(R.id.txtRouteNumber)).setText("" + call.route);
+                                ((TextView) convertView.findViewById(R.id.txtPassing)).setText(""
+                                        + (call.passing_time.getTime() - Calendar.getInstance().getTime().getTime()) / 1000 / 60 + " Minutes");
+                                ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To " + call.destination.name);
 
-                return convertView;
-            }
-        });
+                                return convertView;
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+                        MyBus.onFailure(context, error);
+                    }
+                });
 
         mPopupView.findViewById(R.id.btnViewBusses).setOnClickListener(new View.OnClickListener() {
             @Override

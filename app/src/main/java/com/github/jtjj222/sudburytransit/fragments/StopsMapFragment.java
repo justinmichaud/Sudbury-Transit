@@ -58,48 +58,10 @@ public class StopsMapFragment extends Fragment {
                 .getStops(new Callback<Stops>() {
                     @Override
                     public void success(Stops s, Response response) {
-                        final Queue<Stop> stops = new LinkedList<Stop>();
                         for (Stop stop : s.stops) {
-                            // for some reason, only the numbers of the stops, and not locations
-                            // are included in the /stops endpoint
-                            // so we need to make a separate request for each stop
-                            // or run our own api that syncs with the City's
-                            stops.add(stop);
+                            BusStopOverlayItem item = new BusStopOverlayItem(stop);
+                            busStopOverlay.addItem(item);
                         }
-
-                        final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-                        service.scheduleAtFixedRate(new Runnable() {
-
-                            int i = 0;
-
-                            public void run() {
-
-                                i++;
-                                if (i > 5) {
-                                    service.shutdown();
-                                    return;
-                                }
-
-                                final Stop stop = stops.remove();
-                                MyBus.getService(getResources().getString(R.string.mybus_api_key))
-                                        .getStop(stop.number, new Callback<Stops>() {
-
-                                            @Override
-                                            public void success(Stops stops, Response response) {
-                                                Stop stop = stops.stop;
-
-                                                //possible multithreading issues
-                                                BusStopOverlayItem item = new BusStopOverlayItem(stop);
-                                                busStopOverlay.addItem(item);
-                                            }
-
-                                            @Override
-                                            public void failure(RetrofitError error) {
-                                                MyBus.onFailure(parent.getContext(), error);
-                                            }
-                                        });
-                            }
-                        }, 0, 1, TimeUnit.SECONDS);
                     }
 
                     @Override
