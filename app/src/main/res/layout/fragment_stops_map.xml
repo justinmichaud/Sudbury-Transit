@@ -1,20 +1,23 @@
-<com.sothree.slidinguppanel.SlidingUpPanelLayout xmlns:sothree="http://schemas.android.com/apk/res-auto"
+<com.sothree.slidinguppanel.SlidingUpPanelLayout
+    xmlns:sothree="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/sliding_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="bottom"
     sothree:umanoPanelHeight="100dp"
-    sothree:umanoShadowHeight="4dp">
+    sothree:umanoClipPanel="true"
+    sothree:umanoShadowHeight="4dp"
+    tools:context=".StopsMapActivity">
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="match_parent" android:paddingLeft="0dp"
         android:paddingRight="0dp"
         android:paddingTop="0dp"
         android:paddingBottom="0dp"
-        android:gravity="top"
-        tools:context=".StopsMapActivity">
+        android:gravity="top">
 
         <org.osmdroid.views.MapView android:id="@+id/map"
             android:layout_width="fill_parent"
@@ -26,7 +29,6 @@
         android:layout_width="match_parent"
         android:layout_height="500dp"
         android:gravity="center|top"
-        android:id="@+id/slide_up"
-        android:background="@android:color/transparent"/>
+        android:id="@+id/slide_up" />
 
 </com.sothree.slidinguppanel.SlidingUpPanelLayout>

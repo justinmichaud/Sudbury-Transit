@@ -17,11 +17,14 @@ import com.github.jtjj222.sudburytransit.models.MyBus;
 import com.github.jtjj222.sudburytransit.models.Routes;
 import com.github.jtjj222.sudburytransit.models.Stop;
 import com.github.jtjj222.sudburytransit.models.Stops;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.MyLocationOverlay;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -45,23 +48,42 @@ public class StopsMapFragment extends Fragment {
         super.onCreate(savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
 
-        MapView map = (MapView) view.findViewById(R.id.map);
+        final MapView map = (MapView) view.findViewById(R.id.map);
+        //TODO replace with our own tiles
         map.setTileSource(TileSourceFactory.MAPNIK);
 
         map.setBuiltInZoomControls(false);
         map.setMultiTouchControls(true);
+        map.getController().setZoom(20);
+        map.getController().setCenter(new GeoPoint(46.491271667182488, -80.988006619736623));
 
         busStopOverlay = new BusStopOverlay(parent.getContext(), new ArrayList<BusStopOverlayItem>(), map, view);
         map.getOverlays().add(busStopOverlay);
+
+        final MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(parent.getContext(), map);
+        myLocationOverlay.enableMyLocation(); // not on by default
+        myLocationOverlay.disableFollowLocation();
+        myLocationOverlay.setDrawAccuracyEnabled(true);
+        myLocationOverlay.runOnFirstFix(new Runnable() {
+            public void run() {
+                map.getController().animateTo(myLocationOverlay
+                        .getMyLocation());
+                focusClosestStop(myLocationOverlay.getMyLocation());
+            }
+        });
+        map.getOverlays().add(myLocationOverlay);
 
         MyBus.getService(getResources().getString(R.string.mybus_api_key))
                 .getStops(new Callback<Stops>() {
                     @Override
                     public void success(Stops s, Response response) {
+
                         for (Stop stop : s.stops) {
                             BusStopOverlayItem item = new BusStopOverlayItem(stop);
                             busStopOverlay.addItem(item);
                         }
+
+                        focusClosestStop(myLocationOverlay.getMyLocation());
                     }
 
                     @Override
@@ -70,13 +92,25 @@ public class StopsMapFragment extends Fragment {
                     }
                 });
 
-        IMapController mapController = map.getController();
-        mapController.setZoom(20);
-        //Test start location in middle of sudbury
-        GeoPoint startPoint = new GeoPoint(46.491271667182488, -80.988006619736623);
-        mapController.setCenter(startPoint);
-
         return view;
+    }
+
+    private void focusClosestStop(GeoPoint location) {
+        if (location != null && busStopOverlay.getFocus() == null) {
+
+            BusStopOverlayItem closest = null;
+            for (int i = 0; i < busStopOverlay.size(); i++) {
+                BusStopOverlayItem item = busStopOverlay.getItem(i);
+
+                if (closest == null
+                        || new GeoPoint(closest.getStop().latitude,
+                            closest.getStop().longitude).distanceTo(location)
+                        > new GeoPoint(item.getStop().latitude, item.getStop().longitude)
+                            .distanceTo(location)) {
+                    closest = item;
+                }
+            }
+        }
     }
 
 }

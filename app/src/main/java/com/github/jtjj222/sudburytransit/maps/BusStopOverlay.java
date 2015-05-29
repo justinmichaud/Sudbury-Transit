@@ -21,6 +21,7 @@ import com.github.jtjj222.sudburytransit.models.MyBus;
 import com.github.jtjj222.sudburytransit.models.MyBusService;
 import com.github.jtjj222.sudburytransit.models.Stop;
 import com.github.jtjj222.sudburytransit.models.Stops;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.api.IMapView;
@@ -107,6 +108,8 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
                     .inflate(R.layout.layout_bus_stop_overlay_item_details, null);
 
             ((ViewGroup) root.findViewById(R.id.slide_up)).addView(mPopupView);
+
+            ((SlidingUpPanelLayout) root.findViewById(R.id.sliding_layout)).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
         }
 
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());
@@ -118,20 +121,20 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
                     public void success(Stops stops, Response response) {
                         ((ListView) mPopupView.findViewById(R.id.listCalls))
                                 .setAdapter(new ArrayAdapter<Call>(context, -1, stops.stop.calls) {
-                            public View getView(int position, View convertView, ViewGroup parent) {
-                                if (convertView == null)
-                                    convertView = LayoutInflater.from(getContext())
-                                            .inflate(R.layout.layout_bus_stop_overlay_call, parent, false);
+                                    public View getView(int position, View convertView, ViewGroup parent) {
+                                        if (convertView == null)
+                                            convertView = LayoutInflater.from(getContext())
+                                                    .inflate(R.layout.layout_bus_stop_overlay_call, parent, false);
 
-                                Call call = getItem(position);
-                                ((TextView) convertView.findViewById(R.id.txtRouteNumber)).setText("" + call.route);
-                                ((TextView) convertView.findViewById(R.id.txtPassing)).setText(""
-                                        + (call.passing_time.getTime() - Calendar.getInstance().getTime().getTime()) / 1000 / 60 + " Minutes");
-                                ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To " + call.destination.name);
+                                        Call call = getItem(position);
+                                        ((TextView) convertView.findViewById(R.id.txtRouteNumber)).setText("" + call.route);
+                                        ((TextView) convertView.findViewById(R.id.txtPassing)).setText(""
+                                                + (call.passing_time.getTime() - Calendar.getInstance().getTime().getTime()) / 1000 / 60 + " Minutes");
+                                        ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To " + call.destination.name);
 
-                                return convertView;
-                            }
-                        });
+                                        return convertView;
+                                    }
+                                });
                     }
 
                     @Override
