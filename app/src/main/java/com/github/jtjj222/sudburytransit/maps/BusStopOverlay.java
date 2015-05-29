@@ -11,6 +11,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.GridLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -37,11 +38,11 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     private Context context;
     private MapView map;
 
-    private boolean focusChanged = false;
-    private View mPopupView = null;
-    private float popupX = 0, popupY = 0;
+    private ViewGroup mPopupView;
+    private View root;
 
-    public BusStopOverlay(Context pContext, ArrayList<BusStopOverlayItem> items, final MapView map) {
+    public BusStopOverlay(Context pContext, ArrayList<BusStopOverlayItem> items, final MapView map,
+                          final View root) {
         super(items, new OnItemGestureListener<BusStopOverlayItem>() {
             @Override
             public boolean onItemSingleTapUp(int index, BusStopOverlayItem item) {
@@ -56,47 +57,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         setOnFocusChangeListener(this);
         this.context = pContext;
         this.map = map;
-
-        map.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                MotionEvent localEvent = getPopupMotionEvent(motionEvent);
-                if (localEvent != null) return mPopupView.dispatchTouchEvent(localEvent);
-                else return false;
-            }
-        });
-
-        map.setOnGenericMotionListener(new View.OnGenericMotionListener() {
-            @Override
-            public boolean onGenericMotion(View view, MotionEvent motionEvent) {
-                MotionEvent localEvent = getPopupMotionEvent(motionEvent);
-                if (localEvent != null) return mPopupView.dispatchGenericMotionEvent(localEvent);
-                else return false;
-            }
-        });
-    }
-
-    //Returns an event if you need to dispach it to the popup view, or null otherwise
-    private MotionEvent getPopupMotionEvent(MotionEvent canvasMotionEvent) {
-        if (canvasMotionEvent == null || canvasMotionEvent.getPointerCount() != 1) return null;
-        if (mPopupView != null) {
-
-            float mx = canvasMotionEvent.getX() - popupX;
-            float my = canvasMotionEvent.getY() - popupY;
-
-            //If our touch is inside the bounds of the popup, we forward events to it
-            if (mx >= 0 && my >= 0 && mx <= mPopupView.getWidth()
-                    && my <= mPopupView.getHeight()) {
-                MotionEvent myEvent = MotionEvent.obtain(canvasMotionEvent.getDownTime(),
-                        canvasMotionEvent.getEventTime(), canvasMotionEvent.getAction(),
-                        mx, my, canvasMotionEvent.getMetaState());
-                mPopupView.invalidate();
-                map.postInvalidate();
-                return myEvent;
-            }
-            else return null;
-        }
-        else return null;
+        this.root = root;
     }
 
     @Override
@@ -108,27 +69,39 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
     @Override
     public void onFocusChanged(ItemizedOverlay<?> overlay, OverlayItem newFocus) {
-        focusChanged = true;
+
+        for (int i=0; i<size(); i++) {
+            OverlayItem item = getItem(i);
+
+            //TODO replace with non-selected marker
+            item.setMarker(getDefaultMarker(0));
+        }
+
+        if (newFocus == null || !(newFocus instanceof BusStopOverlayItem)) {
+            updatePopupView(null);
+        }
+        else {
+            //TODO replace with selected marker
+            newFocus.setMarker(ContextCompat.getDrawable(context, R.drawable.ic_launcher));
+            updatePopupView((BusStopOverlayItem) newFocus);
+        }
+        map.invalidate();
     }
 
     @Override
     protected void draw(Canvas canvas, MapView mapView, boolean shadow) {
         super.draw(canvas, mapView, shadow);
-
-        if (mPopupView != null && !shadow) {
-            canvas.save();
-            canvas.translate(popupX, popupY);
-            canvas.rotate(mapView.getMapOrientation());
-            mPopupView.draw(canvas);
-            canvas.restore();
-        }
     }
 
-    protected void updatePopupView(final Context context, final BusStopOverlayItem item) {
+    protected void updatePopupView(final BusStopOverlayItem item) {
 
-        //TODO fix the issue with buttons staying depressed. Re-creating the view each time hides it for now
-        /* if (mPopupView == null) */ mPopupView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-            .inflate(R.layout.layout_bus_stop_overlay_item_details, null);
+        if (mPopupView == null) {
+            mPopupView = (ViewGroup) ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+                    .inflate(R.layout.layout_bus_stop_overlay_item_details, null);
+
+            ((ViewGroup) root.findViewById(R.id.slide_up)).addView(mPopupView);
+        }
+
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());
         ((TextView) mPopupView.findViewById(R.id.txtStopNumber)).setText(""+item.getStop().number);
 
@@ -163,7 +136,6 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
             public void onClick(View view) {
                 setFocus(null);
                 mPopupView = null;
-                map.invalidate();
             }
         });
     }
@@ -171,32 +143,6 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     @Override
     protected void onDrawItem(Canvas canvas, BusStopOverlayItem item, Point curScreenCoords,
                               final float aMapOrientation) {
-        BusStopOverlayItem focusedItem = this.getFocus();
-
-        //If this is the focused item, update the position to draw the overlay
-        //If this is the first time since the focus changed, update the overlay too
-        if (focusedItem != null && focusedItem.equals(item)) {
-            if (focusChanged) {
-                focusChanged = false;
-
-                updatePopupView(context, item);
-
-                //We manually measure it, so we can draw it to the canvas
-                //The addView method shown in the examples was really buggy, especially with zooming and rotation
-                //More: http://stackoverflow.com/questions/17531858/how-to-make-any-view-to-draw-to-canvas
-                int widthSpec = View.MeasureSpec.makeMeasureSpec(ViewGroup.LayoutParams.WRAP_CONTENT, View.MeasureSpec.UNSPECIFIED);
-                int heightSpec = View.MeasureSpec.makeMeasureSpec(400, View.MeasureSpec.UNSPECIFIED);
-                mPopupView.measure(widthSpec, heightSpec);
-                mPopupView.layout(0, 0, mPopupView.getMeasuredWidth(), mPopupView.getMeasuredHeight());
-            }
-
-            this.popupX = curScreenCoords.x  - mPopupView.getWidth()/2f;
-            this.popupY = curScreenCoords.y;
-
-            item.setMarker(ContextCompat.getDrawable(context, R.drawable.ic_launcher));
-        }
-        else item.setMarker(getDefaultMarker(0));
-
         super.onDrawItem(canvas, item, curScreenCoords, aMapOrientation);
     }
 

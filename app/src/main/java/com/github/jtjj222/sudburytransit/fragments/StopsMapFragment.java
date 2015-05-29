@@ -51,7 +51,7 @@ public class StopsMapFragment extends Fragment {
         map.setBuiltInZoomControls(false);
         map.setMultiTouchControls(true);
 
-        busStopOverlay = new BusStopOverlay(parent.getContext(), new ArrayList<BusStopOverlayItem>(), map);
+        busStopOverlay = new BusStopOverlay(parent.getContext(), new ArrayList<BusStopOverlayItem>(), map, view);
         map.getOverlays().add(busStopOverlay);
 
         MyBus.getService(getResources().getString(R.string.mybus_api_key))
