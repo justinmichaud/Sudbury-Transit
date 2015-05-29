@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/translucent_grey"
@@ -15,10 +15,8 @@
         android:id="@+id/txtHeading"
         android:textColor="#FFFFFFFF"
         android:paddingBottom="5dp"
-        app:layout_row="0"
-        app:layout_column="0"
-        app:layout_columnSpan="2"
-        android:maxWidth="300dp" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -26,9 +24,9 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="1001"
         android:id="@+id/txtStopNumber"
-        app:layout_row="1"
-        app:layout_column="0"
-        android:textColor="#FFF" />
+        android:textColor="#FFF"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/txtHeading" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -36,40 +34,33 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Calls"
         android:id="@+id/txtCalls"
-        app:layout_row="2"
-        app:layout_column="0"
         android:textColor="#fff"
-        app:layout_columnSpan="2"
-        app:layout_gravity="center_horizontal" />
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/txtStopNumber"/>
 
-    <LinearLayout
+    <ListView
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_row="3"
-        app:layout_column="0"
-        app:layout_columnSpan="2">
-
-        <ListView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/listCalls" />
-    </LinearLayout>
+        android:layout_height="fill_parent"
+        android:id="@+id/listCalls"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/txtCalls"
+        android:layout_above="@+id/btnClosePopup"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/view_busses"
         android:id="@+id/btnViewBusses"
-        app:layout_row="4"
-        app:layout_column="0" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/close_popup"
         android:id="@+id/btnClosePopup"
-        app:layout_row="4"
-        app:layout_column="1" />
+        android:layout_toRightOf="@id/btnViewBusses"
+        android:layout_alignParentBottom="true"/>
 
-</android.support.v7.widget.GridLayout>
+</RelativeLayout>

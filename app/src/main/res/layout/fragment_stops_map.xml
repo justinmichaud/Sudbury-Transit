@@ -26,6 +26,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center|top"
-        android:id="@+id/slide_up" />
+        android:id="@+id/slide_up"
+        android:background="@android:color/transparent"
+        android:fitsSystemWindows="true"/>
 
 </com.sothree.slidinguppanel.SlidingUpPanelLayout>
