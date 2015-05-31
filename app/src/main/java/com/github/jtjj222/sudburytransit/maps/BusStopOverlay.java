@@ -10,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.ArrayAdapter;
 import android.widget.GridLayout;
 import android.widget.ListView;
@@ -103,13 +105,13 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
     protected void updatePopupView(final BusStopOverlayItem item) {
 
+        if (item == null) return;
+
         if (mPopupView == null) {
             mPopupView = (ViewGroup) ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
                     .inflate(R.layout.layout_bus_stop_overlay_item_details, null);
 
             ((ViewGroup) root.findViewById(R.id.slide_up)).addView(mPopupView);
-
-            ((SlidingUpPanelLayout) root.findViewById(R.id.sliding_layout)).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
         }
 
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());
@@ -158,9 +160,37 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
             @Override
             public void onClick(View view) {
                 setFocus(null);
-                mPopupView = null;
+                animateSlideUpClose();
             }
         });
+
+        animateSlideUpOpen();
+    }
+
+    protected void animateSlideUpOpen() {
+        animateSlideUp(((SlidingUpPanelLayout) root).getPanelHeight(),
+                (int) (100 * (context.getResources().getDisplayMetrics().densityDpi / 160f)));
+    }
+
+    protected void animateSlideUpClose() {
+        ((SlidingUpPanelLayout) root).setPanelHeight(0);
+        ((SlidingUpPanelLayout) root).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+    }
+
+    protected void animateSlideUp(final int from, final int to) {
+
+        Animation anim = new Animation() {
+            //http://stackoverflow.com/questions/22616605/umano-android-slidinguppanel-animation
+            @Override
+            protected void applyTransformation(float interpolatedTime, Transformation t) {
+                float height = (to - from) * interpolatedTime + from;
+
+                ((SlidingUpPanelLayout) root).setPanelHeight((int) height);
+                root.requestLayout();
+            }
+        };
+        anim.setDuration(250);
+        root.startAnimation(anim);
     }
 
     @Override
