@@ -13,7 +13,9 @@ import com.github.jtjj222.sudburytransit.MainActivity;
 import com.github.jtjj222.sudburytransit.maps.BusStopOverlay;
 import com.github.jtjj222.sudburytransit.maps.BusStopOverlayItem;
 import com.github.jtjj222.sudburytransit.R;
+import com.github.jtjj222.sudburytransit.maps.RouteOverlay;
 import com.github.jtjj222.sudburytransit.models.MyBus;
+import com.github.jtjj222.sudburytransit.models.Route;
 import com.github.jtjj222.sudburytransit.models.Routes;
 import com.github.jtjj222.sudburytransit.models.Stop;
 import com.github.jtjj222.sudburytransit.models.Stops;
@@ -42,6 +44,7 @@ import retrofit.client.Response;
 public class StopsMapFragment extends Fragment {
 
     public BusStopOverlay busStopOverlay;
+    public RouteOverlay routeOverlay;
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup parent, Bundle savedInstanceState) {
@@ -56,6 +59,39 @@ public class StopsMapFragment extends Fragment {
         map.setMultiTouchControls(true);
         map.getController().setZoom(20);
         map.getController().setCenter(new GeoPoint(46.491271667182488, -80.988006619736623));
+
+//        routeOverlay = new RouteOverlay(parent.getContext());
+//        map.getOverlays().add(routeOverlay);
+//        MyBus.getService(getResources().getString(R.string.mybus_api_key))
+//                .getRoutes(new Callback<Routes>() {
+//                    @Override
+//                    public void success(Routes r, Response response) {
+//                        for (Route route : r.routes) {
+//
+//                            MyBus.getService(getResources().getString(R.string.mybus_api_key))
+//                                    .getRoute(route.number, new Callback<Routes>() {
+//                                        @Override
+//                                        public void success(Routes routes, Response response) {
+//                                            routeOverlay.routes.add(routes.route);
+//                                            map.invalidate();
+//
+//                                            System.out.println("Add route: " + routes.route.number);
+//                                        }
+//
+//                                        @Override
+//                                        public void failure(RetrofitError error) {
+//                                            MyBus.onFailure(parent.getContext(), error);
+//                                        }
+//                                    });
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void failure(RetrofitError error) {
+//                        MyBus.onFailure(parent.getContext(), error);
+//                    }
+//                });
+
 
         busStopOverlay = new BusStopOverlay(parent.getContext(), new ArrayList<BusStopOverlayItem>(), map, view);
         map.getOverlays().add(busStopOverlay);
@@ -84,6 +120,7 @@ public class StopsMapFragment extends Fragment {
                         }
 
                         focusClosestStop(myLocationOverlay.getMyLocation());
+                        map.invalidate();
                     }
 
                     @Override
@@ -110,6 +147,8 @@ public class StopsMapFragment extends Fragment {
                     closest = item;
                 }
             }
+
+            busStopOverlay.setFocus(closest);
         }
     }
 
