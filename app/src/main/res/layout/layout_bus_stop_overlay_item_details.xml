@@ -50,9 +50,17 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/view_busses"
-        android:id="@+id/btnViewBusses"
+        android:text="@string/navigate_from"
+        android:id="@+id/btnNavigateFrom"
         android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/navigate_to"
+        android:id="@+id/btnNavigateTo"
+        android:layout_toRightOf="@id/btnNavigateFrom"
         android:layout_alignParentBottom="true"/>
 
     <Button
@@ -60,7 +68,7 @@
         android:layout_height="wrap_content"
         android:text="@string/close_popup"
         android:id="@+id/btnClosePopup"
-        android:layout_toRightOf="@id/btnViewBusses"
+        android:layout_toRightOf="@id/btnNavigateTo"
         android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

@@ -30,6 +30,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,13 +46,17 @@ public class StopsMapFragment extends Fragment {
 
     public BusStopOverlay busStopOverlay;
     public RouteOverlay routeOverlay;
+    private ArrayList<Route> routes = new ArrayList<>();
+    public MapView map;
+
+    public Stop from = null, to = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup parent, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
 
-        final MapView map = (MapView) view.findViewById(R.id.map);
+        map = (MapView) view.findViewById(R.id.map);
         //TODO replace with our own tiles
         map.setTileSource(TileSourceFactory.MAPNIK);
 
@@ -60,40 +65,38 @@ public class StopsMapFragment extends Fragment {
         map.getController().setZoom(20);
         map.getController().setCenter(new GeoPoint(46.491271667182488, -80.988006619736623));
 
-//        routeOverlay = new RouteOverlay(parent.getContext());
-//        map.getOverlays().add(routeOverlay);
-//        MyBus.getService(getResources().getString(R.string.mybus_api_key))
-//                .getRoutes(new Callback<Routes>() {
-//                    @Override
-//                    public void success(Routes r, Response response) {
-//                        for (Route route : r.routes) {
-//
-//                            MyBus.getService(getResources().getString(R.string.mybus_api_key))
-//                                    .getRoute(route.number, new Callback<Routes>() {
-//                                        @Override
-//                                        public void success(Routes routes, Response response) {
-//                                            routeOverlay.routes.add(routes.route);
-//                                            map.invalidate();
-//
-//                                            System.out.println("Add route: " + routes.route.number);
-//                                        }
-//
-//                                        @Override
-//                                        public void failure(RetrofitError error) {
-//                                            MyBus.onFailure(parent.getContext(), error);
-//                                        }
-//                                    });
-//                        }
-//                    }
-//
-//                    @Override
-//                    public void failure(RetrofitError error) {
-//                        MyBus.onFailure(parent.getContext(), error);
-//                    }
-//                });
+        routeOverlay = new RouteOverlay(parent.getContext());
+        map.getOverlays().add(routeOverlay);
+        MyBus.getService(getResources().getString(R.string.mybus_api_key))
+                .getRoutes(new Callback<Routes>() {
+                    @Override
+                    public void success(Routes r, Response response) {
+                        for (Route route : r.routes) {
+                            try {
+                                MyBus.getService(getResources().getString(R.string.mybus_api_key))
+                                        .getRoute(route.number, new Callback<Routes>() {
+                                            @Override
+                                            public void success(Routes routes, Response response) {
+                                                StopsMapFragment.this.routes.add(routes.route);
+                                            }
+
+                                            @Override
+                                            public void failure(RetrofitError error) {
+                                                MyBus.onFailure(parent.getContext(), error);
+                                            }
+                                        });
+                            } catch (Exception e) {e.printStackTrace();}
+                        }
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+                        MyBus.onFailure(parent.getContext(), error);
+                    }
+                });
 
 
-        busStopOverlay = new BusStopOverlay(parent.getContext(), new ArrayList<BusStopOverlayItem>(), map, view);
+        busStopOverlay = new BusStopOverlay(this, parent.getContext());
         map.getOverlays().add(busStopOverlay);
 
         final MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(parent.getContext(), map);
@@ -152,4 +155,33 @@ public class StopsMapFragment extends Fragment {
         }
     }
 
+    public void setNavigateTo(Stop stop) {
+        this.to = stop;
+
+        if (to != null && from != null) navigate();
+    }
+
+    public void setNavigateFrom(Stop stop) {
+        this.from = stop;
+
+        if (to != null && from != null) navigate();
+    }
+
+    //TODO graph search with transfers. We need to find out where people can transfer
+    private void navigate() {
+        for (Route route : routes) {
+            if (routeContainsStop(route, from.number)
+                    || routeContainsStop(route, to.number)) {
+                routeOverlay.routes.add(route);
+                map.invalidate();
+            }
+        }
+    }
+
+    private boolean routeContainsStop(Route route, int stop) {
+        for (Stop s : route.stops) {
+            if (s.number == stop) return true;
+        }
+        return false;
+    }
 }

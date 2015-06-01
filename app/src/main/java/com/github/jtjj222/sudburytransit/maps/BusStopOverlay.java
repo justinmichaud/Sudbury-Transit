@@ -18,6 +18,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.github.jtjj222.sudburytransit.R;
+import com.github.jtjj222.sudburytransit.fragments.StopsMapFragment;
 import com.github.jtjj222.sudburytransit.models.Call;
 import com.github.jtjj222.sudburytransit.models.MyBus;
 import com.github.jtjj222.sudburytransit.models.MyBusService;
@@ -43,37 +44,24 @@ import retrofit.client.Response;
  * Created by justin on 17/05/15.
  */
 public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> implements
-            ItemizedOverlay.OnFocusChangeListener {
+        ItemizedOverlay.OnFocusChangeListener {
 
-    private Context context;
-    private MapView map;
-
+    private StopsMapFragment fragment;
     private ViewGroup mPopupView;
-    private View root;
+    private Context context;
 
-    public BusStopOverlay(Context pContext, ArrayList<BusStopOverlayItem> items, final MapView map,
-                          final View root) {
-        super(items, new OnItemGestureListener<BusStopOverlayItem>() {
-            @Override
-            public boolean onItemSingleTapUp(int index, BusStopOverlayItem item) {
-                return false;
-            }
-
-            @Override
-            public boolean onItemLongPress(int index, BusStopOverlayItem item) {
-                return false;
-            }
-        }, new DefaultResourceProxyImpl(pContext));
+    public BusStopOverlay(StopsMapFragment fragment, Context context) {
+        super(new ArrayList<BusStopOverlayItem>(), null,
+                new DefaultResourceProxyImpl(context));
         setOnFocusChangeListener(this);
-        this.context = pContext;
-        this.map = map;
-        this.root = root;
+        this.fragment = fragment;
+        this.context = context;
     }
 
     @Override
     protected boolean onTap(int index) {
         setFocus(getItem(index));
-        map.invalidate();
+        fragment.map.invalidate();
         return true;
     }
 
@@ -95,7 +83,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
             newFocus.setMarker(ContextCompat.getDrawable(context, R.drawable.ic_launcher));
             updatePopupView((BusStopOverlayItem) newFocus);
         }
-        map.invalidate();
+        fragment.map.invalidate();
     }
 
     @Override
@@ -108,16 +96,17 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         if (item == null) return;
 
         if (mPopupView == null) {
-            mPopupView = (ViewGroup) ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+            mPopupView = (ViewGroup) ((LayoutInflater) context
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE))
                     .inflate(R.layout.layout_bus_stop_overlay_item_details, null);
 
-            ((ViewGroup) root.findViewById(R.id.slide_up)).addView(mPopupView);
+            ((ViewGroup) fragment.getView().findViewById(R.id.slide_up)).addView(mPopupView);
         }
 
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());
         ((TextView) mPopupView.findViewById(R.id.txtStopNumber)).setText("" + item.getStop().number);
 
-        MyBus.getService(context.getResources().getString(R.string.mybus_api_key))
+        MyBus.getService(fragment.getView().getResources().getString(R.string.mybus_api_key))
                 .getStop(item.getStop().number, new Callback<Stops>() {
                     @Override
                     public void success(Stops stops, Response response) {
@@ -145,14 +134,17 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
                     }
                 });
 
-        mPopupView.findViewById(R.id.btnViewBusses).setOnClickListener(new View.OnClickListener() {
+        mPopupView.findViewById(R.id.btnNavigateFrom).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new AlertDialog.Builder(context)
-                        .setTitle("You clicked it")
-                        .setMessage("You clicked view stop: " + item.getTitle())
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show();
+                fragment.setNavigateFrom(getFocus().getStop());
+            }
+        });
+
+        mPopupView.findViewById(R.id.btnNavigateTo).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                fragment.setNavigateTo(getFocus().getStop());
             }
         });
 
@@ -168,13 +160,13 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     }
 
     protected void animateSlideUpOpen() {
-        animateSlideUp(((SlidingUpPanelLayout) root).getPanelHeight(),
+        animateSlideUp(((SlidingUpPanelLayout) fragment.getView()).getPanelHeight(),
                 (int) (100 * (context.getResources().getDisplayMetrics().densityDpi / 160f)));
     }
 
     protected void animateSlideUpClose() {
-        ((SlidingUpPanelLayout) root).setPanelHeight(0);
-        ((SlidingUpPanelLayout) root).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+        ((SlidingUpPanelLayout) fragment.getView()).setPanelHeight(0);
+        ((SlidingUpPanelLayout) fragment.getView()).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
     }
 
     protected void animateSlideUp(final int from, final int to) {
@@ -185,12 +177,12 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 float height = (to - from) * interpolatedTime + from;
 
-                ((SlidingUpPanelLayout) root).setPanelHeight((int) height);
-                root.requestLayout();
+                ((SlidingUpPanelLayout) fragment.getView()).setPanelHeight((int) height);
+                fragment.getView().requestLayout();
             }
         };
         anim.setDuration(250);
-        root.startAnimation(anim);
+        fragment.getView().startAnimation(anim);
     }
 
     @Override
