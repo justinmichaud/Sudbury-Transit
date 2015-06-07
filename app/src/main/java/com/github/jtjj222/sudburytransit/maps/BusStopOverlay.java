@@ -120,7 +120,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
                                         Call call = getItem(position);
                                         ((TextView) convertView.findViewById(R.id.txtRouteNumber)).setText("" + call.route);
                                         ((TextView) convertView.findViewById(R.id.txtPassing)).setText(""
-                                                + (call.passing_time.getTime() - Calendar.getInstance().getTime().getTime()) / 1000 / 60 + " Minutes");
+                                                + (int) call.getMinutesToPassing() + " Minutes");
                                         ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To " + call.destination.name);
 
                                         return convertView;
