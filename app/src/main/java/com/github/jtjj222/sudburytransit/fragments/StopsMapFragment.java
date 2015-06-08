@@ -32,11 +32,13 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -189,113 +191,77 @@ public class StopsMapFragment extends Fragment {
 
     // We do graph search on a digraph, where each available route
     // or transfer forms an edge from one stop to another
-    // TODO move this to another class
-    // TODO find out where people can transfer
 
-    protected abstract static class Edge implements Comparable<Edge> {
-
-        protected Stop a, b;
-
-        public Edge(Stop a, Stop b) {
-            this.a = a;
-            this.b = b;
-        }
-
-        public abstract int cost();
-
-        public Stop vertex() { return a; }
-
-        public Stop other(Stop a) {
-            if (a.equals(this.a)) return b;
-            else return this.a;
-        }
-
-        @Override
-        public int compareTo(Edge edge) {
-            return cost()-edge.cost();
-        }
-    }
-
-    protected static class RouteEdge extends Edge {
+    protected static class RouteEdge {
 
         public String route;
+        public Stop a, b;
 
         public RouteEdge(Stop a, Stop b, String route) {
-            super(a, b);
+            this.a = a;
+            this.b = b;
             this.route = route;
         }
 
-        // Time in minutes until bus arrives at second stop
-        // TODO add bus route time
-        @Override
-        public int cost() {
-            int minutesWaitingStopA = Integer.MAX_VALUE;
-            for (Call call : a.calls) {
-                if (call.route.equals(route)) {
-                    minutesWaitingStopA = Math.min((int) call.getMinutesToPassing(), minutesWaitingStopA);
-                }
-            }
-
-            int cost = Integer.MAX_VALUE;
-            for (Call call : b.calls) {
-                if (call.route.equals(route)) {
-                    int minutesPassing = (int) call.getMinutesToPassing();
-                    if (minutesPassing >= minutesWaitingStopA)
-                        cost = Math.min(minutesPassing, cost);
-                }
-            }
-
-            return cost;
-        }
     }
 
     protected static class RouteGraph {
-        public ArrayList<RouteEdge> edges = new ArrayList<>();
+        private HashMap<Integer, ArrayList<RouteEdge>> adjacents = new HashMap<>();
 
-        public Collection<Edge> adj(Stop stop) {
-            Stack<Edge> edges = new Stack<Edge>();
+        public void addEdge(RouteEdge e) {
+            if (isAdjacent(e.a, e.b)) return;
+            if (adjacents.get(e.a.number) == null) adjacents.put(e.a.number, new ArrayList<RouteEdge>());
+            adjacents.get(e.a.number).add(e);
+        }
 
-            for (Edge e : this.edges) {
-                if (e.vertex().equals(stop)) edges.add(e);
-            }
+        public boolean isAdjacent(Stop a, Stop b) {
+            if (adjacents.get(a) == null) return false;
+            return adjacents.get(a.number).contains(b);
+        }
 
-            return edges;
+        public Collection<RouteEdge> adj(int stop) {
+            return adjacents.get(stop);
+        }
+
+        public Set<Integer> vertices() {
+            return adjacents.keySet();
         }
     }
 
     private RouteGraph buildRouteGraph() {
         RouteGraph graph = new RouteGraph();
 
-        //TODO
+        //Until we can get order data from the city,
+        //this directed graph will be wrong
+        for (Route route : routes) {
+            Stop last = null;
+            for (Stop stop : route.stops) {
+                if (last == null) {
+                    last = stop;
+                    continue;
+                }
+
+                graph.addEdge(new RouteEdge(last, stop, route.number));
+                last = stop;
+            }
+        }
 
         return graph;
     }
 
     private void navigate() {
-//        PriorityQueue<Edge> pq = new PriorityQueue<>();
-//        RouteGraph graph = buildRouteGraph();
-//        HashSet<Stop> seen = new HashSet<>();
-//
-//        pq.addAll(graph.adj(from));
-//        seen.add(from);
-//
-//        while (!pq.isEmpty()) {
-//            Edge edge = pq.poll();
-//
-//            if (seen.contains(edge.a) && seen.contains(edge.b)) {
-//
-//            }
-//        }
-
         visualizeRouteGraph(buildRouteGraph());
     }
 
     private void visualizeRouteGraph(RouteGraph graph) {
-        for (RouteEdge e : graph.edges) {
-            Route r = new Route();
-            r.stops.add(e.a);
-            r.stops.add(e.b);
-            routeOverlay.routes.add(r);
+        for (int stop : graph.vertices()) {
+            for (RouteEdge e : graph.adj(stop)) {
+                Route r = new Route();
+                r.stops = new ArrayList<>();
+                r.stops.add(e.a);
+                r.stops.add(e.b);
+                routeOverlay.routes.add(r);
+            }
         }
     }
 
