@@ -31,6 +31,7 @@ import org.osmdroid.views.overlay.MyLocationOverlay;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -250,7 +251,44 @@ public class StopsMapFragment extends Fragment {
     }
 
     private void navigate() {
-        visualizeRouteGraph(buildRouteGraph());
+
+        if (from.number == to.number) return;
+
+        Queue<int[]> routes = new LinkedList<>();
+        ArrayList<int[]> pathsFound = new ArrayList<>();
+        RouteGraph graph = buildRouteGraph();
+
+        routes.add(new int[]{from.number});
+
+        while (!routes.isEmpty()) {
+            int[] route = routes.remove();
+            if (route[route.length-1] == to.number) {
+                pathsFound.add(route);
+                continue;
+            }
+
+            for (RouteEdge e : graph.adj(route[route.length-1])) {
+                int b = e.b.number;
+
+                //Avoid cycles
+                if (contains(b, route)) continue;
+
+                //Avoid redundant paths (they don't need to see
+                // all of the routes a bus travels through, only
+                // the buses to take)
+                //If two routes in a row are the same route,
+                if (route.length > 2 && route[route.length-1]
+                        == route[route.length-2]) {
+                    int[] new_route = Arrays.copyOf(route, route.length);
+                    new_route[new_route.length-1] = b;
+                }
+                else {
+                    routes.add(push_copy(b, route));
+                }
+            }
+        }
+
+        visualizePaths(pathsFound);
     }
 
     private void visualizeRouteGraph(RouteGraph graph) {
@@ -265,10 +303,39 @@ public class StopsMapFragment extends Fragment {
         }
     }
 
-    private boolean routeContainsStop(Route route, int stop) {
-        for (Stop s : route.stops) {
-            if (s.number == stop) return true;
+    private void visualizePaths(ArrayList<int[]> paths) {
+        for (int[] path : paths) {
+            Route r = new Route();
+            r.stops = new ArrayList<>();
+
+            for (int stop : path) {
+                Stop curr = getStop(stop);
+                if (curr == null) throw new RuntimeException("Invalid path");
+
+                r.stops.add(curr);
+            }
+
+            routeOverlay.routes.add(r);
+        }
+    }
+
+    private <T> boolean contains(T needle, T... haystack) {
+        for (T t : haystack) {
+            if (t == needle) return true;
         }
         return false;
+    }
+
+    private int[] push_copy(int tl, int... list) {
+        int[] n = Arrays.copyOf(list, list.length+1);
+        n[n.length-1] = tl;
+        return n;
+    }
+
+    private Stop getStop(int number) {
+        for (Stop s : stops) {
+            if (s.number == number) return s;
+        }
+        return null;
     }
 }
