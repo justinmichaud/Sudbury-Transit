@@ -33,6 +33,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -190,8 +191,10 @@ public class StopsMapFragment extends Fragment {
         if (to != null && from != null) navigate();
     }
 
-    // We do graph search on a digraph, where each available route
-    // or transfer forms an edge from one stop to another
+    // We do k shortest path graph search on a digraph,
+    // where each available route forms an edge from one stop to another
+    // This is done so that it can recommend transfers at places other
+    // than the transit terminal
 
     protected static class RouteEdge {
 
@@ -221,6 +224,7 @@ public class StopsMapFragment extends Fragment {
         }
 
         public Collection<RouteEdge> adj(int stop) {
+            if (!adjacents.containsKey(stop)) return new ArrayList<>();
             return adjacents.get(stop);
         }
 
@@ -235,6 +239,9 @@ public class StopsMapFragment extends Fragment {
         //Until we can get order data from the city,
         //this directed graph will be wrong
         for (Route route : routes) {
+
+            if (route.stops.size() == 0) continue;
+
             Stop last = null;
             for (Stop stop : route.stops) {
                 if (last == null) {
@@ -245,46 +252,60 @@ public class StopsMapFragment extends Fragment {
                 graph.addEdge(new RouteEdge(last, stop, route.number));
                 last = stop;
             }
+
+            graph.addEdge(new RouteEdge(last, route.stops.get(0), route.number));
         }
 
         return graph;
     }
 
+    //K shortest path algorithm
     private void navigate() {
+
+        int K = 5; //TODO load from preference;
 
         if (from.number == to.number) return;
 
-        Queue<int[]> routes = new LinkedList<>();
-        ArrayList<int[]> pathsFound = new ArrayList<>();
+        PriorityQueue<RouteEdge[]> routes = new PriorityQueue<>(10, new Comparator<RouteEdge[]>() {
+            @Override
+            public int compare(RouteEdge[] a, RouteEdge[] b) {
+                int transfersA = 0, transfersB = 0;
+
+                for (int i=1; i<a.length; i++) if (!a[i-1].route.equals(a[i].route))  transfersA++;
+                for (int i=1; i<b.length; i++) if (!b[i-1].route.equals(b[i].route))  transfersB++;
+
+                return transfersA - transfersB;
+            }
+        });
+
+        HashMap<Integer, Integer> seen = new HashMap<>();
+        ArrayList<RouteEdge[]> pathsFound = new ArrayList<>();
         RouteGraph graph = buildRouteGraph();
 
-        routes.add(new int[]{from.number});
+        for (Stop s : stops) {seen.put(s.number, 0);}
 
-        while (!routes.isEmpty()) {
-            int[] route = routes.remove();
-            if (route[route.length-1] == to.number) {
+        for (RouteEdge e : graph.adj(from.number)) {
+            routes.add(new RouteEdge[]{e});
+        }
+        seen.put(from.number, 1);
+
+        while (!routes.isEmpty() && seen.get(to.number) < K) {
+            RouteEdge[] route = routes.remove();
+
+            int b = route[route.length-1].b.number;
+            if (seen.get(b) >= K) continue;
+            seen.put(b, seen.get(b) + 1);
+
+            if (b == to.number) {
                 pathsFound.add(route);
                 continue;
             }
 
-            for (RouteEdge e : graph.adj(route[route.length-1])) {
-                int b = e.b.number;
-
+            for (RouteEdge e : graph.adj(b)) {
                 //Avoid cycles
-                if (contains(b, route)) continue;
+                if (containsStop(b, route)) continue;
 
-                //Avoid redundant paths (they don't need to see
-                // all of the routes a bus travels through, only
-                // the buses to take)
-                //If two routes in a row are the same route,
-                if (route.length > 2 && route[route.length-1]
-                        == route[route.length-2]) {
-                    int[] new_route = Arrays.copyOf(route, route.length);
-                    new_route[new_route.length-1] = b;
-                }
-                else {
-                    routes.add(push_copy(b, route));
-                }
+                routes.add(push_copy(e, route));
             }
         }
 
@@ -292,6 +313,8 @@ public class StopsMapFragment extends Fragment {
     }
 
     private void visualizeRouteGraph(RouteGraph graph) {
+        routeOverlay.routes.clear();
+
         for (int stop : graph.vertices()) {
             for (RouteEdge e : graph.adj(stop)) {
                 Route r = new Route();
@@ -303,31 +326,39 @@ public class StopsMapFragment extends Fragment {
         }
     }
 
-    private void visualizePaths(ArrayList<int[]> paths) {
-        for (int[] path : paths) {
+    private void visualizePaths(ArrayList<RouteEdge[]> paths) {
+        routeOverlay.routes.clear();
+
+        System.out.println("There were " + paths.size() + " paths found:");
+
+        for (RouteEdge[] path : paths) {
+
+            System.out.println("Path:");
+
             Route r = new Route();
             r.stops = new ArrayList<>();
 
-            for (int stop : path) {
-                Stop curr = getStop(stop);
-                if (curr == null) throw new RuntimeException("Invalid path");
+            for (int i=0; i<path.length; i++) {
+                if (i == 0) r.stops.add(path[i].a);
+                else r.stops.add(path[i].b);
 
-                r.stops.add(curr);
+                System.out.println("Path from " + path[i].a.number + " to " + path[i].b.number
+                        + " via " + path[i].route);
             }
 
             routeOverlay.routes.add(r);
         }
     }
 
-    private <T> boolean contains(T needle, T... haystack) {
-        for (T t : haystack) {
-            if (t == needle) return true;
+    private boolean containsStop(int stop, RouteEdge... haystack) {
+        for (RouteEdge e : haystack) {
+            if (e.a.number == stop || e.b.number==stop) return true;
         }
         return false;
     }
 
-    private int[] push_copy(int tl, int... list) {
-        int[] n = Arrays.copyOf(list, list.length+1);
+    private <T> T[] push_copy(T tl, T... list) {
+        T[] n = Arrays.copyOf(list, list.length+1);
         n[n.length-1] = tl;
         return n;
     }
