@@ -92,9 +92,6 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         super.draw(canvas, mapView, shadow);
     }
 
-    private ProgressBar mProgress;
-    private boolean mProgressStatus = false;
-
     protected void updatePopupView(final BusStopOverlayItem item) {
 
         if (item == null) return;
@@ -112,14 +109,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
         ((ListView) mPopupView.findViewById(R.id.listCalls)).setAdapter(null);
 
-        mProgress = (ProgressBar) mPopupView.findViewById(R.id.progress_bar);
-
-        new Thread(new Runnable() {
-            public void run() {
-                while (!mProgressStatus) {
-                }
-            }
-        }).start();
+        mPopupView.findViewById(R.id.progress_bar).setVisibility(View.VISIBLE);
 
         MyBus.getService(fragment.getView().getResources().getString(R.string.mybus_api_key)).getStop(item.getStop().number, new Callback<Stops>() {
             @Override
@@ -137,7 +127,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
                                         + (int) call.getMinutesToPassing() + " Minutes");
                                 ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To " + call.destination.name);
 
-                                mProgressStatus = true;
+                                mPopupView.findViewById(R.id.progress_bar).setVisibility(View.GONE);
 
                                 return convertView;
                             }
@@ -147,7 +137,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
             @Override
             public void failure(RetrofitError error) {
                 MyBus.onFailure(context, error);
-                mProgressStatus = true;
+                mPopupView.findViewById(R.id.progress_bar).setVisibility(View.GONE);
             }
         });
 
