@@ -142,7 +142,7 @@ public class StopsMapFragment extends Fragment {
                                             @Override
                                             public void success(Routes routes, Response response) {
                                                 StopsMapFragment.this.routes.add(routes.route);
-                                                visualizeRouteGraph(buildRouteGraph());
+                                                //visualizeRouteGraph(buildRouteGraph());
                                             }
 
                                             @Override

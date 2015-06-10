@@ -195,7 +195,8 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     @Override
     protected void onDrawItem(Canvas canvas, BusStopOverlayItem item, Point curScreenCoords,
                               final float aMapOrientation) {
-        super.onDrawItem(canvas, item, curScreenCoords, aMapOrientation);
+        if (canvas.getClipBounds().contains(curScreenCoords.x, curScreenCoords.y))
+            super.onDrawItem(canvas, item, curScreenCoords, aMapOrientation);
     }
 
     @Override
