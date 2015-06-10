@@ -15,6 +15,7 @@ import android.view.animation.Transformation;
 import android.widget.ArrayAdapter;
 import android.widget.GridLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.github.jtjj222.sudburytransit.R;
@@ -91,6 +92,9 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         super.draw(canvas, mapView, shadow);
     }
 
+    private ProgressBar mProgress;
+    private boolean mProgressStatus = false;
+
     protected void updatePopupView(final BusStopOverlayItem item) {
 
         if (item == null) return;
@@ -106,33 +110,46 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());
         ((TextView) mPopupView.findViewById(R.id.txtStopNumber)).setText("" + item.getStop().number);
 
-        MyBus.getService(fragment.getView().getResources().getString(R.string.mybus_api_key))
-                .getStop(item.getStop().number, new Callback<Stops>() {
-                    @Override
-                    public void success(Stops stops, Response response) {
-                        ((ListView) mPopupView.findViewById(R.id.listCalls))
-                                .setAdapter(new ArrayAdapter<Call>(context, -1, stops.stop.calls) {
-                                    public View getView(int position, View convertView, ViewGroup parent) {
-                                        if (convertView == null)
-                                            convertView = LayoutInflater.from(getContext())
-                                                    .inflate(R.layout.layout_bus_stop_overlay_call, parent, false);
+        ((ListView) mPopupView.findViewById(R.id.listCalls)).setAdapter(null);
 
-                                        Call call = getItem(position);
-                                        ((TextView) convertView.findViewById(R.id.txtRouteNumber)).setText("" + call.route);
-                                        ((TextView) convertView.findViewById(R.id.txtPassing)).setText(""
-                                                + (int) call.getMinutesToPassing() + " Minutes");
-                                        ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To " + call.destination.name);
+        mProgress = (ProgressBar) mPopupView.findViewById(R.id.progress_bar);
 
-                                        return convertView;
-                                    }
-                                });
-                    }
+        new Thread(new Runnable() {
+            public void run() {
+                while (!mProgressStatus) {
+                }
+            }
+        }).start();
 
-                    @Override
-                    public void failure(RetrofitError error) {
-                        MyBus.onFailure(context, error);
-                    }
-                });
+        MyBus.getService(fragment.getView().getResources().getString(R.string.mybus_api_key)).getStop(item.getStop().number, new Callback<Stops>() {
+            @Override
+            public void success(Stops stops, Response response) {
+                ((ListView) mPopupView.findViewById(R.id.listCalls))
+                        .setAdapter(new ArrayAdapter<Call>(context, -1, stops.stop.calls) {
+                            public View getView(int position, View convertView, ViewGroup parent) {
+                                if (convertView == null)
+                                    convertView = LayoutInflater.from(getContext())
+                                            .inflate(R.layout.layout_bus_stop_overlay_call, parent, false);
+
+                                Call call = getItem(position);
+                                ((TextView) convertView.findViewById(R.id.txtRouteNumber)).setText("" + call.route);
+                                ((TextView) convertView.findViewById(R.id.txtPassing)).setText(""
+                                        + (int) call.getMinutesToPassing() + " Minutes");
+                                ((TextView) convertView.findViewById(R.id.txtDestination)).setText("To " + call.destination.name);
+
+                                mProgressStatus = true;
+
+                                return convertView;
+                            }
+                        });
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                MyBus.onFailure(context, error);
+                mProgressStatus = true;
+            }
+        });
 
         mPopupView.findViewById(R.id.btnNavigateFrom).setOnClickListener(new View.OnClickListener() {
             @Override
