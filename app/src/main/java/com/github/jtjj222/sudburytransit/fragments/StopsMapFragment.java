@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -141,6 +142,7 @@ public class StopsMapFragment extends Fragment {
                                             @Override
                                             public void success(Routes routes, Response response) {
                                                 StopsMapFragment.this.routes.add(routes.route);
+                                                visualizeRouteGraph(buildRouteGraph());
                                             }
 
                                             @Override
@@ -279,7 +281,7 @@ public class StopsMapFragment extends Fragment {
         });
 
         HashMap<Integer, Integer> seen = new HashMap<>();
-        ArrayList<RouteEdge[]> pathsFound = new ArrayList<>();
+        LinkedList<RouteEdge[]> pathsFound = new LinkedList<>();
         RouteGraph graph = buildRouteGraph();
 
         for (Stop s : stops) {seen.put(s.number, 0);}
@@ -302,16 +304,49 @@ public class StopsMapFragment extends Fragment {
             }
 
             for (RouteEdge e : graph.adj(b)) {
-                //Avoid cycles
-                if (containsStop(b, route)) continue;
-
                 routes.add(push_copy(e, route));
             }
+        }
+
+        //Remove paths that take more than two transfers
+        Iterator<RouteEdge[]> itr = pathsFound.iterator();
+        while (itr.hasNext()) {
+            RouteEdge[] path = itr.next();
+
+            int transfers = 0;
+            for (int i=1; i<path.length; i++)
+                if (!path[i-1].route.equals(path[i].route)) transfers++;
+
+            if (transfers > 2) {
+                itr.remove();
+                System.out.println("Info: Removed path with more than two transfers");
+            }
+        }
+
+        System.out.println(pathsFound.size() + " paths found.");
+        for (RouteEdge[] path : pathsFound) {
+            System.out.println("Path: ");
+
+            System.out.println("Get on bus " + path[0].route
+                    + " at stop " + path[0].a.number + " "
+                    + path[0].a.name + ".");
+
+            for (int i=1; i<path.length-1; i++) {
+                if (!path[i].route.equals(path[i-1].route)) {
+                    System.out.println("Get off at stop " + path[i].a.number + " "
+                            + path[i].a.name + ".");
+                    System.out.println("Get on bus " + path[i].route + " at this stop.");
+                }
+            }
+
+            System.out.println("Get off at stop " + path[path.length-1].a.number + " "
+                    + path[path.length-1].a.name + ".");
         }
 
         visualizePaths(pathsFound);
     }
 
+    //Debug method
     private void visualizeRouteGraph(RouteGraph graph) {
         routeOverlay.routes.clear();
 
@@ -326,14 +361,11 @@ public class StopsMapFragment extends Fragment {
         }
     }
 
-    private void visualizePaths(ArrayList<RouteEdge[]> paths) {
+    //Debug method
+    private void visualizePaths(List<RouteEdge[]> paths) {
         routeOverlay.routes.clear();
 
-        System.out.println("There were " + paths.size() + " paths found:");
-
         for (RouteEdge[] path : paths) {
-
-            System.out.println("Path:");
 
             Route r = new Route();
             r.stops = new ArrayList<>();
@@ -341,9 +373,6 @@ public class StopsMapFragment extends Fragment {
             for (int i=0; i<path.length; i++) {
                 if (i == 0) r.stops.add(path[i].a);
                 else r.stops.add(path[i].b);
-
-                System.out.println("Path from " + path[i].a.number + " to " + path[i].b.number
-                        + " via " + path[i].route);
             }
 
             routeOverlay.routes.add(r);
@@ -366,6 +395,13 @@ public class StopsMapFragment extends Fragment {
     private Stop getStop(int number) {
         for (Stop s : stops) {
             if (s.number == number) return s;
+        }
+        return null;
+    }
+
+    private Route getRoute(String number) {
+        for (Route r : routes) {
+            if (r.number.equals(number)) return r;
         }
         return null;
     }
