@@ -10,3 +10,10 @@ To build, add a file in res/values called prod.xml:
 ```
 
 You can get an api key from http://mybus.greatersudbury.ca/api/
+
+
+Icons
+------
+Bus icon, used with modifications, from
+https://thenounproject.com/term/bus-stop/5551/
+By Venkatesh Aiyulu, IN

@@ -2,8 +2,10 @@ package com.github.jtjj222.sudburytransit.maps;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
@@ -51,12 +53,25 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     private ViewGroup mPopupView;
     private Context context;
 
+    private BitmapDrawable bus_icon, bus_icon_selected;
+
     public BusStopOverlay(StopsMapFragment fragment, Context context) {
         super(new ArrayList<BusStopOverlayItem>(), null,
                 new DefaultResourceProxyImpl(context));
         setOnFocusChangeListener(this);
         this.fragment = fragment;
         this.context = context;
+
+        this.bus_icon = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.bus_icon);
+        this.bus_icon_selected = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.bus_icon_selected);
+
+        //Scale based on screen resolution
+        this.bus_icon = new BitmapDrawable(context.getResources(),
+                Bitmap.createScaledBitmap(bus_icon.getBitmap(), getPixelsFromDP(40),
+                        getPixelsFromDP(48) , false));
+        this.bus_icon_selected = new BitmapDrawable(context.getResources(),
+                Bitmap.createScaledBitmap(bus_icon_selected.getBitmap(), getPixelsFromDP(40),
+                        getPixelsFromDP(48) , false));
     }
 
     @Override
@@ -69,19 +84,10 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     @Override
     public void onFocusChanged(ItemizedOverlay<?> overlay, OverlayItem newFocus) {
 
-        for (int i=0; i<size(); i++) {
-            OverlayItem item = getItem(i);
-
-            //TODO replace with non-selected marker
-            item.setMarker(getDefaultMarker(0));
-        }
-
         if (newFocus == null || !(newFocus instanceof BusStopOverlayItem)) {
             updatePopupView(null);
         }
         else {
-            //TODO replace with selected marker
-            newFocus.setMarker(ContextCompat.getDrawable(context, R.drawable.ic_launcher));
             updatePopupView((BusStopOverlayItem) newFocus);
         }
         fragment.map.invalidate();
@@ -168,12 +174,16 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
     protected void animateSlideUpOpen() {
         animateSlideUp(((SlidingUpPanelLayout) fragment.getView()).getPanelHeight(),
-                (int) (100 * (context.getResources().getDisplayMetrics().densityDpi / 160f)));
+                getPixelsFromDP(100));
     }
 
     protected void animateSlideUpClose() {
         ((SlidingUpPanelLayout) fragment.getView()).setPanelHeight(0);
         ((SlidingUpPanelLayout) fragment.getView()).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+    }
+
+    private int getPixelsFromDP(int dp) {
+        return (int) (dp * (context.getResources().getDisplayMetrics().densityDpi / 160f));
     }
 
     protected void animateSlideUp(final int from, final int to) {
@@ -195,8 +205,16 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     @Override
     protected void onDrawItem(Canvas canvas, BusStopOverlayItem item, Point curScreenCoords,
                               final float aMapOrientation) {
-        if (canvas.getClipBounds().contains(curScreenCoords.x, curScreenCoords.y))
-            super.onDrawItem(canvas, item, curScreenCoords, aMapOrientation);
+        if (!canvas.getClipBounds().contains(curScreenCoords.x, curScreenCoords.y)) return;
+
+        if (getFocus() != null && getFocus().equals(item)) {
+            item.setMarker(bus_icon_selected);
+        }
+        else {
+            item.setMarker(bus_icon);
+        }
+
+        super.onDrawItem(canvas, item, curScreenCoords, aMapOrientation);
     }
 
     @Override
