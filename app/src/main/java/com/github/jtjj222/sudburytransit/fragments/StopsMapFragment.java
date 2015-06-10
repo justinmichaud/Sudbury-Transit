@@ -3,6 +3,7 @@ package com.github.jtjj222.sudburytransit.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -103,6 +104,13 @@ public class StopsMapFragment extends Fragment {
 
         loadRoutes(parent.getContext());
         loadStops(parent.getContext());
+
+        DisplayMetrics metrics = parent.getContext().getResources().getDisplayMetrics();
+
+        /* SlidingUpPanelLayout.LayoutParams layoutParams = new SlidingUpPanelLayout.LayoutParams();
+        layoutParams.height = metrics.heightPixels;
+        layoutParams.width = SlidingUpPanelLayout.LayoutParams.MATCH_PARENT;
+        view.findViewById(R.id.slide_up).setLayoutParams(layoutParams); */
 
         return view;
     }
