@@ -7,5 +7,8 @@
     <string name="navigate_to">Navigate to</string>
     <string name="navigate_from">Navigate From</string>
     <string name="close_popup">Close</string>
+    <string name="from_label">From</string>
+    <string name="to_label">To</string>
+    <string name="view_directions">View Directions</string>
 
 </resources>
