@@ -111,7 +111,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         }
 
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());
-        ((TextView) mPopupView.findViewById(R.id.txtStopNumber)).setText("" + item.getStop().number);
+        ((TextView) mPopupView.findViewById(R.id.txtStopNumber)).setText("Stop " + item.getStop().number);
 
         ((ListView) mPopupView.findViewById(R.id.listCalls)).setAdapter(null);
 
@@ -174,7 +174,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
     protected void animateSlideUpOpen() {
         animateSlideUp(((SlidingUpPanelLayout) fragment.getView()).getPanelHeight(),
-                getPixelsFromDP(200));
+                getPixelsFromDP(150));
     }
 
     protected void animateSlideUpClose() {

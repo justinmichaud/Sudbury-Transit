@@ -105,13 +105,6 @@ public class StopsMapFragment extends Fragment {
         loadRoutes(parent.getContext());
         loadStops(parent.getContext());
 
-        DisplayMetrics metrics = parent.getContext().getResources().getDisplayMetrics();
-
-        /* SlidingUpPanelLayout.LayoutParams layoutParams = new SlidingUpPanelLayout.LayoutParams();
-        layoutParams.height = metrics.heightPixels;
-        layoutParams.width = SlidingUpPanelLayout.LayoutParams.MATCH_PARENT;
-        view.findViewById(R.id.slide_up).setLayoutParams(layoutParams); */
-
         return view;
     }
 

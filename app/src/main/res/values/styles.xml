@@ -1,22 +1,10 @@
 <resources>
 
-    <!-- Base application theme. -->
+    <!-- Base application theme. (not api dependent) -->
     <style name="AppTheme.Base" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="android:actionBarStyle">@style/ThemeActionBar</item>
-        <!-- <item name="android:windowActionBarOverlay">true</item> -->
-
-        <!-- Support library compatibility -->
-        <item name="actionBarStyle">@style/ThemeActionBar</item>
-        <!-- <item name="windowActionBarOverlay">true</item> -->
-
-    </style>
-
-    <style name="ThemeActionBar"
-        parent="Widget.AppCompat.Light.ActionBar.Solid">
-        <item name="android:background">@color/translucent_grey</item>
-        <!-- Support library compatibility -->
-        <item name="background">@color/translucent_grey</item>
+        <item name="colorPrimary">@color/brand_main</item>
+        <item name="colorPrimaryDark">@color/brand_dark</item>
+        <item name="colorAccent">@color/brand_compliment</item>
     </style>
 
     <style name="AppTheme" parent="AppTheme.Base"></style>
