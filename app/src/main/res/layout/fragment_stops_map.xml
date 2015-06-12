@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:orientation="vertical"
-            android:id="@+id/directionsPane"
+            android:id="@+id/searchDrawer"
             android:background="@color/brand_main">
 
             <TextView

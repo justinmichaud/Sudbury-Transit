@@ -10,5 +10,6 @@
     <string name="from_label">From</string>
     <string name="to_label">To</string>
     <string name="view_directions">View Directions</string>
+    <string name="action_search">Search</string>
 
 </resources>

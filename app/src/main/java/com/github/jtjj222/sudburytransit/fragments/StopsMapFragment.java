@@ -1,12 +1,17 @@
 package com.github.jtjj222.sudburytransit.fragments;
 
+import android.animation.TimeInterpolator;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import com.github.jtjj222.sudburytransit.R;
 import com.github.jtjj222.sudburytransit.maps.BusStopOverlay;
@@ -62,11 +67,29 @@ public class StopsMapFragment extends Fragment {
 
     public Stop from = null, to = null;
 
+    private LinearLayout searchDrawer = null;
+    private int searchDrawerHeight; // height of the FrameLayout (generated automatically)
+    private boolean searchDrawerOpened = false;
+    private int searchDrawerDuration = 500; //time in milliseconds
+    private TimeInterpolator interpolator = null; //type of animation see@developer.android.com/reference/android/animation/TimeInterpolator.html
+
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup parent, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
 
+        searchDrawer = (LinearLayout) view.findViewById(R.id.searchDrawer);
+        interpolator = new AccelerateDecelerateInterpolator();
+
+        searchDrawer.post(new Runnable() {
+            @Override
+            public void run() {
+                searchDrawerHeight = searchDrawer.getHeight();
+                searchDrawer.setTranslationY(-searchDrawerHeight);
+            }
+        });
+
+        setHasOptionsMenu(true);
 
         map = (MapView) view.findViewById(R.id.map);
         //TODO replace with our own tiles
@@ -183,6 +206,40 @@ public class StopsMapFragment extends Fragment {
                         MyBus.onFailure(errorContext, error);
                     }
                 });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_search:
+                System.out.println("Search test");
+                openSearch();
+                return true;
+            case R.id.action_settings:
+                System.out.println("Settings test");
+                // openSettings();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void openSearch() {
+        if(searchDrawerOpened) {
+            searchDrawer.animate()
+                    .translationY(-searchDrawerHeight)
+                    .setDuration(searchDrawerDuration)
+                    .setInterpolator(interpolator)
+                    .start();
+            searchDrawerOpened = false;
+        } else {
+            searchDrawer.animate()
+                    .translationY(0)
+                    .setDuration(searchDrawerDuration)
+                    .setInterpolator(interpolator)
+                    .start();
+            searchDrawerOpened = true;
+        }
     }
 
     private void loadRoutes(final Context errorContext) {
