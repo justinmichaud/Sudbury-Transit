@@ -11,7 +11,9 @@ import android.graphics.drawable.Drawable;
 
 import com.github.jtjj222.sudburytransit.models.Stop;
 
-public class BusStopOverlayItem extends OverlayItem {
+import java.io.Serializable;
+
+public class BusStopOverlayItem extends OverlayItem implements Serializable {
 
     private Stop stop;
 

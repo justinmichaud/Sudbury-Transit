@@ -32,6 +32,7 @@ import org.osmdroid.views.overlay.ItemizedOverlay;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 

@@ -36,6 +36,7 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -47,7 +48,7 @@ import retrofit.client.Response;
  * Created by justin on 17/05/15.
  */
 public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> implements
-        ItemizedOverlay.OnFocusChangeListener {
+        ItemizedOverlay.OnFocusChangeListener, Serializable {
 
     private StopsMapFragment fragment;
     private ViewGroup mPopupView;
