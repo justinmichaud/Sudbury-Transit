@@ -26,37 +26,47 @@
             android:padding="16dp"
             android:orientation="vertical"
             android:id="@+id/searchDrawer"
-            android:background="@color/brand_main">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/light"
-                android:text="@string/from_label"/>
+            android:background="@color/brand_main"
+            android:gravity="right">
 
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/light"
-                android:id="@+id/fromEditText"/>
+                android:textColorHint="@color/light"
+                android:id="@+id/fromEditText"
+                android:background="@null"
+                android:hint="From"
+                android:paddingTop="50px"
+                android:paddingBottom="50px"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/light"
-                android:text="@string/to_label"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="#fff"/>
 
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/light"
-                android:id="@+id/toEditText"/>
+                android:textColorHint="@color/light"
+                android:id="@+id/toEditText"
+                android:background="@null"
+                android:hint="Destination"
+                android:paddingTop="50px"
+                android:paddingBottom="50px"/>
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <com.gc.materialdesign.views.ButtonFlat
                 android:id="@+id/btnViewDirections"
-                android:text="@string/view_directions"/>
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/view_directions"
+                android:textColor="#FFFFFF"
+                android:color="#FFFFFF"
+                android:paddingTop="20px"
+                android:paddingBottom="20px"
+                android:paddingLeft="20px"
+                android:paddingRight="20px"/>
 
         </LinearLayout>
 

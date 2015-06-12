@@ -22,8 +22,10 @@ android {
 dependencies {
     repositories {
         mavenCentral()
+        jcenter()
     }
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.github.navasmdc:MaterialDesign:1.5@aar'
     compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.android.support:gridlayout-v7:22.1.1'
     compile 'org.slf4j:slf4j-simple:1.6.1'
