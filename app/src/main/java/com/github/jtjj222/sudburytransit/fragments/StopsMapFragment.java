@@ -24,6 +24,7 @@ import com.github.jtjj222.sudburytransit.models.SimpleDiskCache;
 import com.github.jtjj222.sudburytransit.models.Stop;
 import com.github.jtjj222.sudburytransit.models.Stops;
 import com.jakewharton.disklrucache.DiskLruCache;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
@@ -76,7 +77,7 @@ public class StopsMapFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup parent, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        View view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
+        final View view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
 
         searchDrawer = (LinearLayout) view.findViewById(R.id.searchDrawer);
         interpolator = new AccelerateDecelerateInterpolator();
@@ -170,6 +171,31 @@ public class StopsMapFragment extends Fragment {
             loadRoutes(parent.getContext());
             e.printStackTrace();;
         }
+
+        ((SlidingUpPanelLayout) view).setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+            double lastOffset = 1.0;
+
+            @Override
+            public void onPanelSlide(View panel, float slideOffset) {
+                if(slideOffset < lastOffset){
+                    ((SlidingUpPanelLayout) view).setPanelHeight(0);
+                    ((SlidingUpPanelLayout) view).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+                }
+                lastOffset = slideOffset;
+            }
+
+            @Override
+            public void onPanelExpanded(View panel) {}
+
+            @Override
+            public void onPanelCollapsed(View panel) {}
+
+            @Override
+            public void onPanelAnchored(View panel) {}
+
+            @Override
+            public void onPanelHidden(View panel) {}
+        });
 
         return view;
     }

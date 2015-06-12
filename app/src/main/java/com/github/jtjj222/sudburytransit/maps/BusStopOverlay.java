@@ -8,6 +8,7 @@ import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -84,7 +85,6 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
     @Override
     public void onFocusChanged(ItemizedOverlay<?> overlay, OverlayItem newFocus) {
-
         if (newFocus == null || !(newFocus instanceof BusStopOverlayItem)) {
             updatePopupView(null);
         }
@@ -186,6 +186,9 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
     private int getPixelsFromDP(int dp) {
         return (int) (dp * (context.getResources().getDisplayMetrics().densityDpi / 160f));
     }
+
+    // PanelSlideListener ?
+    //By default, the main content is dimmed as the panel slides up. You can change the dim color by changing umanoFadeColor. Set it to "@android:color/transparent" to remove dimming completely.
 
     protected void animateSlideUp(final int from, final int to) {
 
