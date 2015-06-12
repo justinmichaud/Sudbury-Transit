@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="brand_main" type="color">#FFAC0000</item>
-    <item name="brand_dark" type="color">#FF890000</item>
-    <item name="brand_compliment" type="color">#FF890000</item>
+    <item name="brand_main" type="color">#3F51B5</item>
+    <item name="brand_dark" type="color">#303F9F</item>
+    <item name="brand_compliment" type="color">#303F9F</item>
     <item name="light" type="color">#FFFFFFFF</item>
     <item name="dark" type="color">#FF222222</item>
 </resources>
