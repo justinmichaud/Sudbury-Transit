@@ -162,14 +162,6 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
             }
         });
 
-        mPopupView.findViewById(R.id.btnClosePopup).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setFocus(null);
-                animateSlideUpClose();
-            }
-        });
-
         animateSlideUpOpen();
     }
 
