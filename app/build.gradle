@@ -31,5 +31,5 @@ dependencies {
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.sothree.slidinguppanel:library:3.0.0'
     compile 'com.jakewharton:disklrucache:2.0.2'
-    compile files('lib/commons-io-2.4.jar')
+    compile 'commons-io:commons-io:2.4'
 }

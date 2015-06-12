@@ -1,5 +1,6 @@
 /local.properties
 /.idea/
+*.iml
 .DS_Store
 
 #Avoid leaking api keys
