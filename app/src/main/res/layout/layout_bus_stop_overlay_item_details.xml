@@ -20,7 +20,7 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="New Sudbury Shopping Centre"
         android:id="@+id/txtHeading"
-        android:textColor="@color/dark"
+        android:textColor="@color/brand_main"
         android:paddingBottom="5dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true" />
@@ -52,30 +52,24 @@
         android:id="@+id/listCalls"
         android:layout_alignParentLeft="true"
         android:layout_below="@id/txtCalls"
-        android:layout_above="@+id/btnClosePopup"/>
+        android:layout_above="@+id/btnNavigateFrom"/>
 
-    <Button
+    <com.gc.materialdesign.views.ButtonFlat
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/navigate_from"
         android:id="@+id/btnNavigateFrom"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:background="@color/brand_compliment"/>
 
-    <Button
+    <com.gc.materialdesign.views.ButtonFlat
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/navigate_to"
         android:id="@+id/btnNavigateTo"
         android:layout_toRightOf="@id/btnNavigateFrom"
-        android:layout_alignParentBottom="true"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/close_popup"
-        android:id="@+id/btnClosePopup"
-        android:layout_toRightOf="@id/btnNavigateTo"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:background="@color/brand_compliment"/>
 
 </RelativeLayout>

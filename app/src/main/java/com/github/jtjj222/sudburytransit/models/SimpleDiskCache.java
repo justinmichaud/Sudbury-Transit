@@ -30,6 +30,7 @@ import com.jakewharton.disklrucache.DiskLruCache;
  * Adapted from https://github.com/fhucho/simple-disk-cache
  * License Apache 2.0
  */
+
 public class SimpleDiskCache {
 
 	private static final int VALUE_IDX = 0;
