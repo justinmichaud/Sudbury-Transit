@@ -11,5 +11,6 @@
     <string name="to_label">To</string>
     <string name="view_directions">Directions</string>
     <string name="action_search">Search</string>
+    <string name="toggle_stops">Stops</string>
 
 </resources>

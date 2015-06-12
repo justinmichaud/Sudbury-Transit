@@ -96,7 +96,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
     @Override
     protected void draw(Canvas canvas, MapView mapView, boolean shadow) {
-        super.draw(canvas, mapView, shadow);
+        if (isEnabled()) super.draw(canvas, mapView, shadow);
     }
 
     protected void updatePopupView(final BusStopOverlayItem item) {

@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ToggleButton;
 
 import com.github.jtjj222.sudburytransit.R;
 import com.github.jtjj222.sudburytransit.maps.BusStopOverlay;
@@ -106,6 +107,15 @@ public class StopsMapFragment extends Fragment {
 
         busStopOverlay = new BusStopOverlay(this, parent.getContext());
         map.getOverlays().add(busStopOverlay);
+
+        view.findViewById(R.id.tglStops).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (((ToggleButton) view).isChecked()) busStopOverlay.setEnabled(true);
+                else busStopOverlay.setEnabled(false);
+                map.invalidate();
+            }
+        });
 
         // When we get the location or we get the list of stops (whichever comes last)
         // we move the map to their location (if they haven't already selected a stop)
