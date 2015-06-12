@@ -67,7 +67,6 @@ public class StopsMapFragment extends Fragment {
         super.onCreate(savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
 
-
         map = (MapView) view.findViewById(R.id.map);
         //TODO replace with our own tiles
         map.setTileSource(TileSourceFactory.MAPNIK);
@@ -98,137 +97,44 @@ public class StopsMapFragment extends Fragment {
         });
         map.getOverlays().add(myLocationOverlay);
 
+        loadData(parent);
+
+        return view;
+    }
+
+    private void loadData(final View parent) {
         try {
             cache = SimpleDiskCache.open(parent.getContext().getCacheDir(), 1, 1048576);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // Load Stops
-        try {
-            SimpleDiskCache.InputStreamEntry ise = cache.getInputStream("stops");
-            ObjectInputStream is = new ObjectInputStream(ise.getInputStream());
-
-            // The reason I make a new arraylist is because it doesn't work with the current stops.
-            // I don't know why this is.  I think it may be just because of the way setting em to eachother works?
-            ArrayList<Stop> cachedStops = (ArrayList<Stop>) is.readObject();
-            for (Stop stop : cachedStops) {
-                BusStopOverlayItem item = new BusStopOverlayItem(stop);
-                busStopOverlay.addItem(item);
-                stops.add(stop);
+        MyBus.loadStops(parent.getContext(), cache, new Callback<ArrayList<Stop>>() {
+            @Override
+            public void success(ArrayList<Stop> stops, Response response) {
+                StopsMapFragment.this.stops = stops;
+                for (Stop s : stops) busStopOverlay.addItem(new BusStopOverlayItem(s));
+                focusClosestStop(myLocationOverlay.getMyLocation());
+                map.invalidate();
             }
 
-            System.out.println("Stops loaded.");
+            @Override
+            public void failure(RetrofitError error) {
+                MyBus.onFailure(parent.getContext(), error);
+            }
+        });
 
-            focusClosestStop(myLocationOverlay.getMyLocation());
-            map.invalidate();
-        } catch (IOException|ClassNotFoundException|NullPointerException e) {
-            loadStops(parent.getContext());
-            e.printStackTrace();;
-        }
-
-        // Load Routes
-        try {
-            SimpleDiskCache.InputStreamEntry ise = cache.getInputStream("routes");
-            ObjectInputStream is = new ObjectInputStream(ise.getInputStream());
-
-            // The reason I make a new arraylist is because it doesn't work with the current stops.
-            // I don't know why this is.  I think it may be just because of the way setting em to eachother works?
-            ArrayList<Route> cachedRoutes = (ArrayList<Route>) is.readObject();
-            for (Route route : cachedRoutes) {
-                StopsMapFragment.this.routes.add(route);
+        MyBus.loadRoutes(parent.getContext(), cache, new Callback<ArrayList<Route>>() {
+            @Override
+            public void success(ArrayList<Route> routes, Response response) {
+                StopsMapFragment.this.routes = routes;
             }
 
-            System.out.println("Routes loaded.");
-
-            focusClosestStop(myLocationOverlay.getMyLocation());
-            map.invalidate();
-        } catch (IOException|ClassNotFoundException|NullPointerException e) {
-            loadRoutes(parent.getContext());
-            e.printStackTrace();;
-        }
-
-        return view;
-    }
-
-    private void loadStops(final Context errorContext) {
-
-        MyBus.getService(getResources().getString(R.string.mybus_api_key))
-                .getStops(new Callback<Stops>() {
-                    @Override
-                    public void success(Stops s, Response response) {
-
-                        for (Stop stop : s.stops) {
-                            BusStopOverlayItem item = new BusStopOverlayItem(stop);
-                            busStopOverlay.addItem(item);
-                            stops.add(stop);
-                        }
-
-                        try {
-                            Map<String, Serializable> metadata = new HashMap<>();
-                            ObjectOutputStream oos = new ObjectOutputStream(cache.openStream("stops", metadata));
-                            oos.writeObject(s.stops);
-                            System.out.println("Stops written.");
-                            oos.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                        focusClosestStop(myLocationOverlay.getMyLocation());
-                        map.invalidate();
-                    }
-
-                    @Override
-                    public void failure(RetrofitError error) {
-                        MyBus.onFailure(errorContext, error);
-                    }
-                });
-    }
-
-    private void loadRoutes(final Context errorContext) {
-
-        MyBus.getService(getResources().getString(R.string.mybus_api_key))
-                .getRoutes(new Callback<Routes>() {
-                    @Override
-                    public void success(Routes r, Response response) {
-                        final ArrayList<Route> cachedRoutes = new ArrayList<>();
-
-                        for (Route route : r.routes) {
-                            try {
-                                MyBus.getService(getResources().getString(R.string.mybus_api_key))
-                                        .getRoute(route.number, new Callback<Routes>() {
-                                            @Override
-                                            public void success(Routes routes, Response response) {
-                                                StopsMapFragment.this.routes.add(routes.route);
-                                                cachedRoutes.add(routes.route);
-                                                //visualizeRouteGraph(buildRouteGraph());
-                                            }
-
-                                            @Override
-                                            public void failure(RetrofitError error) {
-                                                MyBus.onFailure(errorContext, error);
-                                            }
-                                        });
-                            } catch (Exception e) {e.printStackTrace();}
-                        }
-
-                        try {
-                            Map<String, Serializable> metadata = new HashMap<>();
-                            ObjectOutputStream oos = new ObjectOutputStream(cache.openStream("routes", metadata));
-                            oos.writeObject(cachedRoutes);
-                            System.out.println("Routes written.");
-                            oos.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-
-                    @Override
-                    public void failure(RetrofitError error) {
-                        MyBus.onFailure(errorContext, error);
-                    }
-                });
+            @Override
+            public void failure(RetrofitError error) {
+                MyBus.onFailure(parent.getContext(), error);
+            }
+        });
     }
 
     private void focusClosestStop(GeoPoint location) {
