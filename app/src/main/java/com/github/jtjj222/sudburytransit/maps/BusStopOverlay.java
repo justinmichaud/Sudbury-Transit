@@ -167,7 +167,7 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
 
     protected void animateSlideUpOpen() {
         animateSlideUp(((SlidingUpPanelLayout) fragment.getView()).getPanelHeight(),
-                getPixelsFromDP(150));
+                getPixelsFromDP(100));
     }
 
     protected void animateSlideUpClose() {

@@ -142,6 +142,7 @@ public class StopsMapFragment extends Fragment {
                 if (slideOffset < lastOffset) {
                     ((SlidingUpPanelLayout) view).setPanelHeight(0);
                     ((SlidingUpPanelLayout) view).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+                    busStopOverlay.setFocus(null);
                 }
                 lastOffset = slideOffset;
             }
