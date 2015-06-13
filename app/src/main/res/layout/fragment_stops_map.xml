@@ -46,12 +46,12 @@
                 android:id="@+id/fromEditText"
                 android:background="@null"
                 android:hint="From"
-                android:paddingTop="50px"
-                android:paddingBottom="50px"/>
+                android:paddingTop="25dp"
+                android:paddingBottom="25dp"/>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1px"
+                android:layout_height="1dp"
                 android:background="#fff"/>
 
             <EditText
@@ -62,8 +62,8 @@
                 android:id="@+id/toEditText"
                 android:background="@null"
                 android:hint="Destination"
-                android:paddingTop="50px"
-                android:paddingBottom="50px"/>
+                android:paddingTop="25dp"
+                android:paddingBottom="25dp"/>
 
             <com.gc.materialdesign.views.ButtonFlat
                 android:id="@+id/btnViewDirections"
@@ -71,10 +71,10 @@
                 android:layout_height="wrap_content"
                 android:text="@string/view_directions"
                 android:background="@android:color/white"
-                android:paddingTop="20px"
-                android:paddingBottom="20px"
-                android:paddingLeft="20px"
-                android:paddingRight="20px"/>
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"/>
 
         </LinearLayout>
 

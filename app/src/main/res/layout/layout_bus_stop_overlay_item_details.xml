@@ -31,18 +31,18 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="1001"
         android:id="@+id/txtStopNumber"
-        android:textColor="@color/dark"
+        android:textColor="@color/grey"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/txtHeading" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Calls"
         android:id="@+id/txtCalls"
         android:textColor="@color/dark"
-        android:layout_centerHorizontal="true"
+        android:paddingTop="25dp"
         android:layout_below="@id/txtStopNumber"/>
 
     <ListView
