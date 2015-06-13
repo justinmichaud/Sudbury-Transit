@@ -5,5 +5,5 @@
     <item name="brand_compliment" type="color">#A12500</item>
     <item name="light" type="color">#FFFFFFFF</item>
     <item name="dark" type="color">#FF222222</item>
-    <item name="grey" type="color">#999999</item>
+    <item name="text_grey" type="color">#FF999999</item>
 </resources>
