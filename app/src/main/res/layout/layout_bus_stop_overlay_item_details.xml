@@ -51,25 +51,7 @@
         android:layout_height="fill_parent"
         android:id="@+id/listCalls"
         android:layout_alignParentLeft="true"
-        android:layout_below="@id/txtCalls"
-        android:layout_above="@+id/btnNavigateFrom"/>
+        android:layout_below="@id/txtCalls"/>
 
-    <com.gc.materialdesign.views.ButtonFlat
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/navigate_from"
-        android:id="@+id/btnNavigateFrom"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="true"
-        android:background="@color/brand_compliment"/>
-
-    <com.gc.materialdesign.views.ButtonFlat
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/navigate_to"
-        android:id="@+id/btnNavigateTo"
-        android:layout_toRightOf="@id/btnNavigateFrom"
-        android:layout_alignParentBottom="true"
-        android:background="@color/brand_compliment"/>
 
 </RelativeLayout>

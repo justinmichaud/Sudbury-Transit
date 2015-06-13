@@ -148,20 +148,6 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
             }
         });
 
-        mPopupView.findViewById(R.id.btnNavigateFrom).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                fragment.setNavigateFrom(getFocus().getStop());
-            }
-        });
-
-        mPopupView.findViewById(R.id.btnNavigateTo).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                fragment.setNavigateTo(getFocus().getStop());
-            }
-        });
-
         animateSlideUpOpen();
     }
 
