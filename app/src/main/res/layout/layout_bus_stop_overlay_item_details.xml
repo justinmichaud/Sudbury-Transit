@@ -31,7 +31,7 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="1001"
         android:id="@+id/txtStopNumber"
-        android:textColor="@color/grey"
+        android:textColor="@color/text_grey"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/txtHeading" />
 
