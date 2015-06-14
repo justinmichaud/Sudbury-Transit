@@ -1,32 +1,24 @@
 package com.github.jtjj222.sudburytransit.maps;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.ArrayAdapter;
-import android.widget.GridLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.github.jtjj222.sudburytransit.R;
 import com.github.jtjj222.sudburytransit.fragments.StopsMapFragment;
 import com.github.jtjj222.sudburytransit.models.Call;
 import com.github.jtjj222.sudburytransit.models.MyBus;
-import com.github.jtjj222.sudburytransit.models.MyBusService;
-import com.github.jtjj222.sudburytransit.models.Stop;
 import com.github.jtjj222.sudburytransit.models.Stops;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -39,15 +31,11 @@ import org.osmdroid.views.overlay.OverlayItem;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
-/**
- * Created by justin on 17/05/15.
- */
 public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> implements
         ItemizedOverlay.OnFocusChangeListener, Serializable {
 
@@ -106,9 +94,8 @@ public class BusStopOverlay extends ItemizedIconOverlay<BusStopOverlayItem> impl
         if (mPopupView == null) {
             mPopupView = (ViewGroup) ((LayoutInflater) context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-                    .inflate(R.layout.layout_bus_stop_overlay_item_details, null);
-
-            ((ViewGroup) fragment.getView().findViewById(R.id.slide_up)).addView(mPopupView);
+                    .inflate(R.layout.layout_bus_stop_overlay_item_details,
+                            ((ViewGroup) fragment.getView().findViewById(R.id.slide_up)));
         }
 
         ((TextView) mPopupView.findViewById(R.id.txtHeading)).setText(item.getTitle());

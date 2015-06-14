@@ -1,15 +1,9 @@
 package com.github.jtjj222.sudburytransit.maps;
 
-/**
- * Created by justin on 17/05/15.
- */
+import com.github.jtjj222.sudburytransit.models.Stop;
+
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.overlay.OverlayItem;
-
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
-
-import com.github.jtjj222.sudburytransit.models.Stop;
 
 import java.io.Serializable;
 

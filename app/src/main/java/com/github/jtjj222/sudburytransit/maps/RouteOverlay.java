@@ -1,48 +1,21 @@
 package com.github.jtjj222.sudburytransit.maps;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Point;
-import android.support.v4.content.ContextCompat;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 
-import com.github.jtjj222.sudburytransit.R;
-import com.github.jtjj222.sudburytransit.models.Call;
-import com.github.jtjj222.sudburytransit.models.MyBus;
 import com.github.jtjj222.sudburytransit.models.Route;
 import com.github.jtjj222.sudburytransit.models.Stop;
-import com.github.jtjj222.sudburytransit.models.Stops;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.osmdroid.DefaultResourceProxyImpl;
-import org.osmdroid.api.IMapView;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.ItemizedIconOverlay;
-import org.osmdroid.views.overlay.ItemizedOverlay;
 import org.osmdroid.views.overlay.Overlay;
-import org.osmdroid.views.overlay.OverlayItem;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Calendar;
 
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
-
-/**
- * Created by justin on 17/05/15.
- */
 public class RouteOverlay extends Overlay {
 
     public ArrayList<Route> routes = new ArrayList<Route>();

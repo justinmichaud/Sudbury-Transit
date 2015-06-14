@@ -4,7 +4,6 @@ import android.content.Context;
 import android.widget.Toast;
 
 import com.github.jtjj222.sudburytransit.R;
-import com.github.jtjj222.sudburytransit.maps.BusStopOverlayItem;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
@@ -16,12 +15,10 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import retrofit.Callback;
 import retrofit.RequestInterceptor;
@@ -30,9 +27,6 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit.converter.GsonConverter;
 
-/**
- * Created by justin on 24/05/15.
- */
 public class MyBus {
 
     public static MyBusService getService(final String api_key) {
@@ -81,7 +75,7 @@ public class MyBus {
                 .getStops(new Callback<Stops>() {
                     @Override
                     public void success(Stops s, Response response) {
-                        ArrayList<Stop> stops = new ArrayList<Stop>();
+                        ArrayList<Stop> stops = new ArrayList<>();
                         stops.addAll(s.stops);
 
                         writeToCache(cache, "stops", stops);
@@ -154,7 +148,7 @@ public class MyBus {
         } catch (IOException e) {
             e.printStackTrace();
             try {
-                oos.close();
+                if (oos != null) oos.close();
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
@@ -164,14 +158,21 @@ public class MyBus {
     private static Object loadFromCache(SimpleDiskCache cache, String key) {
         if (cache == null) return null;
 
-        try (ObjectInputStream is =
-                     new ObjectInputStream(cache.getInputStream(key).getInputStream())){
+        ObjectInputStream is = null;
+        try {
+            is = new ObjectInputStream(cache.getInputStream(key).getInputStream());
 
             Object o = is.readObject();
             System.out.println("Loaded " + key + " from cache");
             return o;
         } catch (IOException|ClassNotFoundException|NullPointerException e) {
             return null;
+        } finally {
+            try {
+                if (is != null) is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -190,7 +191,6 @@ public class MyBus {
                 cache.clear();
                 writeToCache(cache, "time", System.currentTimeMillis());
                 System.out.println("Invalidated cache");
-                return;
             }
 
         } catch (IOException e) {

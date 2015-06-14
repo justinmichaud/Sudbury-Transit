@@ -1,16 +1,13 @@
 package com.github.jtjj222.sudburytransit.fragments;
 
 import android.animation.TimeInterpolator;
-import android.content.Context;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -21,35 +18,23 @@ import com.github.jtjj222.sudburytransit.maps.BusStopOverlayItem;
 import com.github.jtjj222.sudburytransit.maps.RouteOverlay;
 import com.github.jtjj222.sudburytransit.models.MyBus;
 import com.github.jtjj222.sudburytransit.models.Route;
-import com.github.jtjj222.sudburytransit.models.Routes;
 import com.github.jtjj222.sudburytransit.models.SimpleDiskCache;
 import com.github.jtjj222.sudburytransit.models.Stop;
-import com.github.jtjj222.sudburytransit.models.Stops;
-import com.jakewharton.disklrucache.DiskLruCache;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
-import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -72,7 +57,6 @@ public class StopsMapFragment extends Fragment {
 
     private LinearLayout searchDrawer = null;
     private boolean searchDrawerOpened = false;
-    private int searchDrawerDuration = 500; //time in milliseconds
     private TimeInterpolator interpolator = null; //type of animation see@developer.android.com/reference/android/animation/TimeInterpolator.html
 
     @Override
@@ -176,6 +160,7 @@ public class StopsMapFragment extends Fragment {
 
     @Override
     public void onStop() {
+        super.onStop();
         try {
             cache.getCache().close();
         } catch (IOException e) {
@@ -234,6 +219,8 @@ public class StopsMapFragment extends Fragment {
     }
 
     private void openSearch() {
+        int searchDrawerDuration = 500;
+
         if(searchDrawerOpened) {
             searchDrawer.animate()
                     .translationY(-searchDrawer.getHeight())
@@ -303,8 +290,12 @@ public class StopsMapFragment extends Fragment {
         }
 
         public boolean isAdjacent(Stop a, Stop b) {
-            if (adjacents.get(a) == null) return false;
-            return adjacents.get(a.number).contains(b);
+            if (adjacents.get(a.number) == null) return false;
+
+            for (RouteEdge e : adj(a.number)) {
+                if (e.b.number == b.number) return true;
+            }
+            return false;
         }
 
         public Collection<RouteEdge> adj(int stop) {
@@ -468,9 +459,9 @@ public class StopsMapFragment extends Fragment {
 
         StringBuilder directions = new StringBuilder();
 
-        directions.append(pathsFound.size() + " paths found:");
+        directions.append(pathsFound.size()).append(" paths found:");
         for (RouteEdge[] path : pathsFound) {
-            directions.append("\nPath: " + getPathCost(path) / 60f + " min\n");
+            directions.append("\nPath: ").append(getPathCost(path) / 60f).append(" min\n");
 
             for (int i=0; i<path.length; i++) {
                 if (i != 0 && path[i].route.equals(path[i-1].route)) continue;
@@ -549,7 +540,7 @@ public class StopsMapFragment extends Fragment {
         return false;
     }
 
-    private <T> T[] push_copy(T tl, T... list) {
+    private <T> T[] push_copy(T tl, T[] list) {
         T[] n = Arrays.copyOf(list, list.length+1);
         n[n.length-1] = tl;
         return n;
