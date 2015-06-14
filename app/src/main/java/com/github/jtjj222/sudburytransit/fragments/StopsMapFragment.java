@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -109,9 +110,10 @@ public class StopsMapFragment extends Fragment {
         view.findViewById(R.id.tglStops).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (((ToggleButton) view).isChecked()) busStopOverlay.setEnabled(true);
-                else busStopOverlay.setEnabled(false);
-                map.invalidate();
+//                if (((ToggleButton) view).isChecked()) busStopOverlay.setEnabled(true);
+//                else busStopOverlay.setEnabled(false);
+//                map.invalidate();
+                navigate(new GeoPoint(46.4886476,-80.9351185), new GeoPoint(46.4692213,-81.0247679));
             }
         });
 
@@ -327,86 +329,121 @@ public class StopsMapFragment extends Fragment {
     }
 
     //K shortest path algorithm
-    private void navigate(GeoPoint from, GeoPoint to) {
+    private void navigate(GeoPoint fromPoint, GeoPoint toPoint) {
 
-//        int K = 5; //TODO load from preference; Max number of routes to find
-//
-//        PriorityQueue<RouteEdge[]> routes = new PriorityQueue<>(10, new Comparator<RouteEdge[]>() {
-//            @Override
-//            public int compare(RouteEdge[] a, RouteEdge[] b) {
-//                int transfersA = 0, transfersB = 0;
-//
-//                for (int i=1; i<a.length; i++) if (!a[i-1].route.equals(a[i].route))  transfersA++;
-//                for (int i=1; i<b.length; i++) if (!b[i-1].route.equals(b[i].route))  transfersB++;
-//
-//                return transfersA - transfersB;
-//            }
-//        });
-//
-//        HashMap<Integer, Integer> seen = new HashMap<>();
-//        LinkedList<RouteEdge[]> pathsFound = new LinkedList<>();
-//        RouteGraph graph = buildRouteGraph();
-//
-//        for (Stop s : stops) {seen.put(s.number, 0);}
-//
-//        for (RouteEdge e : graph.adj(from.number)) {
-//            routes.add(new RouteEdge[]{e});
-//        }
-//        seen.put(from.number, 1);
-//
-//        while (!routes.isEmpty() && seen.get(to.number) < K) {
-//            RouteEdge[] route = routes.remove();
-//
-//            int b = route[route.length-1].b.number;
-//            if (seen.get(b) >= K) continue;
-//            seen.put(b, seen.get(b) + 1);
-//
-//            if (b == to.number) {
-//                pathsFound.add(route);
-//                continue;
-//            }
-//
-//            for (RouteEdge e : graph.adj(b)) {
-//                routes.add(push_copy(e, route));
-//            }
-//        }
-//
-//        //Remove paths that take more than two transfers
-//        Iterator<RouteEdge[]> itr = pathsFound.iterator();
-//        while (itr.hasNext()) {
-//            RouteEdge[] path = itr.next();
-//
-//            int transfers = 0;
-//            for (int i=1; i<path.length; i++)
-//                if (!path[i-1].route.equals(path[i].route)) transfers++;
-//
-//            if (transfers > 2) {
-//                itr.remove();
-//                System.out.println("Info: Removed path with more than two transfers");
-//            }
-//        }
-//
-//        System.out.println(pathsFound.size() + " paths found.");
-//        for (RouteEdge[] path : pathsFound) {
-//            System.out.println("Path: ");
-//
-//            System.out.println("Get on bus " + path[0].route
-//                    + " at stop " + path[0].a.number + " "
-//                    + path[0].a.name + ".");
-//
-//            for (int i=1; i<path.length-1; i++) {
-//                if (!path[i].route.equals(path[i-1].route)) {
-//                    System.out.println("Get off at stop " + path[i].a.number + " "
-//                            + path[i].a.name + ".");
-//                    System.out.println("Get on bus " + path[i].route + " at this stop.");
-//                }
-//            }
-//
-//            System.out.println("Get off at stop " + path[path.length-1].a.number + " "
-//                    + path[path.length-1].a.name + ".");
-//        }
-//
-//        visualizePaths(pathsFound);
+        int K = 5; //TODO load from preference; Max number of routes to find
+
+        //TODO take into account bus times (if we can get that data from the city)
+        //TODO refine the weighting when taking into account walking distances
+        //TODO fix this method returning multiple redundant routes with the same bus
+        PriorityQueue<RouteEdge[]> routes = new PriorityQueue<>(10, new Comparator<RouteEdge[]>() {
+
+            private int getCost(RouteEdge[] a) {
+                int transfersA = 0;
+                float walkingA = 0;
+
+                for (int i=1; i<a.length; i++) {
+                    if (a[i].route.equals("Walking")) walkingA += new GeoPoint(a[i].a.latitude, a[i].a.longitude)
+                            .distanceTo(new GeoPoint(a[i].b.latitude, a[i].b.longitude));
+                    else if (!a[i-1].route.equals(a[i].route))  transfersA++;
+                }
+
+                return (int) (transfersA + walkingA);
+            }
+
+            @Override
+            public int compare(RouteEdge[] a, RouteEdge[] b) {
+                return (getCost(a) - getCost(b));
+            }
+        });
+
+        HashMap<Integer, Integer> seen = new HashMap<>();
+        LinkedList<RouteEdge[]> pathsFound = new LinkedList<>();
+        RouteGraph graph = buildRouteGraph();
+
+        //Add source and sink vertices
+        Stop from = getStop(-2);
+        if (from == null) {
+            from = new Stop();
+            stops.add(from);
+            busStopOverlay.addItem(new BusStopOverlayItem(from));
+        }
+        from.latitude = fromPoint.getLatitude();
+        from.longitude = fromPoint.getLongitude();
+        from.name = "From";
+        from.number = -2;
+
+        Stop to = getStop(-1);
+        if (to == null) {
+            to = new Stop();
+            stops.add(to);
+            busStopOverlay.addItem(new BusStopOverlayItem(to));
+        }
+        to.latitude = toPoint.getLatitude();
+        to.longitude = toPoint.getLongitude();
+        to.name = "To";
+        to.number = -1;
+
+        // Connect source and sink to every stop
+        for (Stop s : stops) {
+            if (s.number == from.number || s.number == to.number) continue;
+            graph.addEdge(new RouteEdge(from, s, "Walking"));
+            graph.addEdge(new RouteEdge(s, to, "Walking"));
+        }
+        // Connect source and sink together, so that if it makes sense
+        // to walk instead of taking the bus, we offer that option too
+        graph.addEdge(new RouteEdge(from, to, "Walking"));
+
+        // Set each stop to being never being seen
+        for (Stop s : stops) {seen.put(s.number, 0);}
+
+        //Visit the source
+        for (RouteEdge e : graph.adj(from.number)) {
+            routes.add(new RouteEdge[]{e});
+        }
+        seen.put(from.number, 1);
+
+        //Visit every stop at most K times, storing the route used to get there
+        while (!routes.isEmpty() && seen.get(to.number) < K) {
+            RouteEdge[] route = routes.remove();
+
+            int b = route[route.length-1].b.number;
+            if (seen.get(b) >= K) continue;
+            seen.put(b, seen.get(b) + 1);
+
+            if (b == to.number) {
+                pathsFound.add(route);
+                continue;
+            }
+
+            for (RouteEdge e : graph.adj(b)) {
+                routes.add(push_copy(e, route));
+            }
+        }
+
+        // TODO move this to another function, show in ui instead of console
+        // Visualize the paths found
+        System.out.println(pathsFound.size() + " paths found.");
+        for (RouteEdge[] path : pathsFound) {
+            System.out.println("Path: ");
+
+            System.out.println("Get on bus " + path[0].route
+                    + " at stop " + path[0].a.number + " "
+                    + path[0].a.name + ".");
+
+            for (int i=1; i<path.length-1; i++) {
+                if (!path[i].route.equals(path[i-1].route)) {
+                    System.out.println("Get off at stop " + path[i].a.number + " "
+                            + path[i].a.name + ".");
+                    System.out.println("Get on bus " + path[i].route + " at this stop.");
+                }
+            }
+
+            System.out.println("Get off at stop " + path[path.length-1].b.number + " "
+                    + path[path.length-1].b.name + ".");
+        }
+
+        visualizePaths(pathsFound);
     }
 
     //Debug method
