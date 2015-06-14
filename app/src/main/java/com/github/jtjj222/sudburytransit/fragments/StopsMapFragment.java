@@ -110,9 +110,16 @@ public class StopsMapFragment extends Fragment {
         view.findViewById(R.id.tglStops).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                if (((ToggleButton) view).isChecked()) busStopOverlay.setEnabled(true);
-//                else busStopOverlay.setEnabled(false);
-//                map.invalidate();
+                if (((ToggleButton) view).isChecked()) busStopOverlay.setEnabled(true);
+                else busStopOverlay.setEnabled(false);
+                map.invalidate();
+            }
+        });
+
+        view.findViewById(R.id.btnViewDirections).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //TODO Alec replace this with results from search fields
                 navigate(new GeoPoint(46.4886476,-80.9351185), new GeoPoint(46.4692213,-81.0247679));
             }
         });
@@ -328,32 +335,36 @@ public class StopsMapFragment extends Fragment {
         return graph;
     }
 
+    private float getPathCost(RouteEdge[] a) {
+        int transfersTime = 0;
+        float distanceTime = 0;
+
+        for (int i=0; i<a.length; i++) {
+            //Distance in m
+            float dist = new GeoPoint(a[i].a.latitude, a[i].a.longitude)
+                    .distanceTo(new GeoPoint(a[i].b.latitude, a[i].b.longitude));
+
+            if (a[i].route.equals("Walking")) distanceTime += dist/(5*1000/3600); // (m) / (5km/h * 1000m/km / 3600s/h)
+            else distanceTime += dist/(50*1000/3600); //50km/h average, TODO replace with bus schedule times
+
+            if (i != 0 && !a[i-1].route.equals(a[i].route))  transfersTime += 5*60; //Assume 5 min. for transfer
+        }
+
+        return transfersTime + distanceTime;
+    }
+
     //K shortest path algorithm
     private void navigate(GeoPoint fromPoint, GeoPoint toPoint) {
 
         int K = 5; //TODO load from preference; Max number of routes to find
 
-        //TODO take into account bus times (if we can get that data from the city)
-        //TODO refine the weighting when taking into account walking distances
+        //TODO refine the weighting to allow specifying whether or not you are willing to walk
         //TODO fix this method returning multiple redundant routes with the same bus
         PriorityQueue<RouteEdge[]> routes = new PriorityQueue<>(10, new Comparator<RouteEdge[]>() {
 
-            private int getCost(RouteEdge[] a) {
-                int transfersA = 0;
-                float walkingA = 0;
-
-                for (int i=1; i<a.length; i++) {
-                    if (a[i].route.equals("Walking")) walkingA += new GeoPoint(a[i].a.latitude, a[i].a.longitude)
-                            .distanceTo(new GeoPoint(a[i].b.latitude, a[i].b.longitude));
-                    else if (!a[i-1].route.equals(a[i].route))  transfersA++;
-                }
-
-                return (int) (transfersA + walkingA);
-            }
-
             @Override
             public int compare(RouteEdge[] a, RouteEdge[] b) {
-                return (getCost(a) - getCost(b));
+                return (int) Math.signum(getPathCost(a) - getPathCost(b));
             }
         });
 
@@ -425,7 +436,7 @@ public class StopsMapFragment extends Fragment {
         // Visualize the paths found
         System.out.println(pathsFound.size() + " paths found.");
         for (RouteEdge[] path : pathsFound) {
-            System.out.println("Path: ");
+            System.out.println("Path: " + getPathCost(path)/60f + " min");
 
             System.out.println("Get on bus " + path[0].route
                     + " at stop " + path[0].a.number + " "
@@ -441,6 +452,12 @@ public class StopsMapFragment extends Fragment {
 
             System.out.println("Get off at stop " + path[path.length-1].b.number + " "
                     + path[path.length-1].b.name + ".");
+
+            //debugging
+//            for (RouteEdge e : path) {
+//                System.out.println("Go from " + e.a.number + " " + e.a.name + " to "
+//                    + e.b.number + " " + e.b.name + " via " + e.route);
+//            }
         }
 
         visualizePaths(pathsFound);
