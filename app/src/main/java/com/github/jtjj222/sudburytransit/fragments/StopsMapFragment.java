@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.github.jtjj222.sudburytransit.R;
@@ -27,6 +28,7 @@ import com.github.jtjj222.sudburytransit.models.Stops;
 import com.jakewharton.disklrucache.DiskLruCache;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -69,7 +71,6 @@ public class StopsMapFragment extends Fragment {
     public MapView map;
 
     private LinearLayout searchDrawer = null;
-    private int searchDrawerHeight; // height of the FrameLayout (generated automatically)
     private boolean searchDrawerOpened = false;
     private int searchDrawerDuration = 500; //time in milliseconds
     private TimeInterpolator interpolator = null; //type of animation see@developer.android.com/reference/android/animation/TimeInterpolator.html
@@ -85,8 +86,7 @@ public class StopsMapFragment extends Fragment {
         searchDrawer.post(new Runnable() {
             @Override
             public void run() {
-                searchDrawerHeight = searchDrawer.getHeight();
-                searchDrawer.setTranslationY(-searchDrawerHeight);
+                searchDrawer.setTranslationY(-searchDrawer.getHeight());
             }
         });
 
@@ -174,6 +174,15 @@ public class StopsMapFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onStop() {
+        try {
+            cache.getCache().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void loadData(final View parent) {
         try {
             cache = SimpleDiskCache.open(parent.getContext().getCacheDir(), 1, 1048576);
@@ -213,7 +222,6 @@ public class StopsMapFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_search:
-                System.out.println("Search test");
                 openSearch();
                 return true;
             case R.id.action_settings:
@@ -228,7 +236,7 @@ public class StopsMapFragment extends Fragment {
     private void openSearch() {
         if(searchDrawerOpened) {
             searchDrawer.animate()
-                    .translationY(-searchDrawerHeight)
+                    .translationY(-searchDrawer.getHeight())
                     .setDuration(searchDrawerDuration)
                     .setInterpolator(interpolator)
                     .start();
@@ -335,17 +343,38 @@ public class StopsMapFragment extends Fragment {
         return graph;
     }
 
+    //Copied from GeopPoint
+    private static float dist(double latA, double longA, double latB, double longB) {
+        final double a1 = GeoPoint.DEG2RAD * latA;
+        final double a2 = GeoPoint.DEG2RAD * longA;
+        final double b1 = GeoPoint.DEG2RAD * latB;
+        final double b2 = GeoPoint.DEG2RAD * longB;
+
+        final double cosa1 = Math.cos(a1);
+        final double cosb1 = Math.cos(b1);
+
+        final double t1 = cosa1 * Math.cos(a2) * cosb1 * Math.cos(b2);
+
+        final double t2 = cosa1 * Math.sin(a2) * cosb1 * Math.sin(b2);
+
+        final double t3 = Math.sin(a1) * Math.sin(b1);
+
+        final double tt = Math.acos(t1 + t2 + t3);
+
+        return (int) (GeoPoint.RADIUS_EARTH_METERS * tt);
+    }
+
     private float getPathCost(RouteEdge[] a) {
         int transfersTime = 0;
         float distanceTime = 0;
 
         for (int i=0; i<a.length; i++) {
-            //Distance in m
-            float dist = new GeoPoint(a[i].a.latitude, a[i].a.longitude)
-                    .distanceTo(new GeoPoint(a[i].b.latitude, a[i].b.longitude));
-
-            if (a[i].route.equals("Walking")) distanceTime += dist/(5*1000/3600); // (m) / (5km/h * 1000m/km / 3600s/h)
-            else distanceTime += dist/(50*1000/3600); //50km/h average, TODO replace with bus schedule times
+            if (a[i].route.equals("Walking")) {
+                //Distance in m
+                float dist = dist(a[i].a.latitude, a[i].a.longitude, a[i].b.latitude, a[i].b.longitude);
+                distanceTime += dist/(5*1000/3600); // (m) / (5km/h * 1000m/km / 3600s/h)
+            }
+            else distanceTime += 1; //TODO replace with bus schedule times
 
             if (i != 0 && !a[i-1].route.equals(a[i].route))  transfersTime += 5*60; //Assume 5 min. for transfer
         }
@@ -432,26 +461,41 @@ public class StopsMapFragment extends Fragment {
             }
         }
 
-        // TODO move this to another function, show in ui instead of console
-        // Visualize the paths found
-        System.out.println(pathsFound.size() + " paths found.");
+        showNavigationResult(pathsFound);
+    }
+
+    private void showNavigationResult(LinkedList<RouteEdge[]> pathsFound) {
+
+        StringBuilder directions = new StringBuilder();
+
+        directions.append(pathsFound.size() + " paths found:");
         for (RouteEdge[] path : pathsFound) {
-            System.out.println("Path: " + getPathCost(path)/60f + " min");
+            directions.append("\nPath: " + getPathCost(path) / 60f + " min\n");
 
-            System.out.println("Get on bus " + path[0].route
-                    + " at stop " + path[0].a.number + " "
-                    + path[0].a.name + ".");
+            for (int i=0; i<path.length; i++) {
+                if (i != 0 && path[i].route.equals(path[i-1].route)) continue;
 
-            for (int i=1; i<path.length-1; i++) {
-                if (!path[i].route.equals(path[i-1].route)) {
-                    System.out.println("Get off at stop " + path[i].a.number + " "
-                            + path[i].a.name + ".");
-                    System.out.println("Get on bus " + path[i].route + " at this stop.");
+                if (path[i].route.equals("Walking")) {
+                    directions.append("- Walk from stop ").append(path[i].a.number)
+                        .append(" ").append(path[i].a.name).append(" to stop ")
+                        .append(path[i].b.number).append(" ").append(path[i].b.name)
+                        .append("\n");
+                }
+                else {
+                    if (i > 0 && !path[i-1].route.equals("Walking")) {
+                        directions.append("- Get off bus at ").append(path[i].a.number)
+                                .append(" ").append(path[i].a.name)
+                                .append("\n- Get on bus ").append(path[i].route)
+                                .append(" at this stop.\n");
+                    }
+                    else {
+                        directions.append("- Get on bus ").append(path[i].route)
+                                .append(" at stop ").append(path[i].a.number)
+                                .append(" ").append(path[i].a.name)
+                                .append(".\n");
+                    }
                 }
             }
-
-            System.out.println("Get off at stop " + path[path.length-1].b.number + " "
-                    + path[path.length-1].b.name + ".");
 
             //debugging
 //            for (RouteEdge e : path) {
@@ -459,6 +503,8 @@ public class StopsMapFragment extends Fragment {
 //                    + e.b.number + " " + e.b.name + " via " + e.route);
 //            }
         }
+
+        ((TextView) getView().findViewById(R.id.txtDirections)).setText(directions.toString());
 
         visualizePaths(pathsFound);
     }
