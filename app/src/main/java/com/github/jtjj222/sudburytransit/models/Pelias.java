@@ -1,5 +1,8 @@
 package com.github.jtjj222.sudburytransit.models;
 
+import android.content.Context;
+import android.widget.Toast;
+
 import com.github.jtjj222.sudburytransit.R;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -32,7 +35,7 @@ public class Pelias {
                 .create(PeliasService.class);
     }
 
-    public void getSuggestedLocations(String partialSearch, final Callback<ArrayList<Place>> callback) {
+    public static void getSuggestedLocations(String partialSearch, final Callback<ArrayList<Place>> callback) {
         getService().suggestLocations(partialSearch, new Callback<Places>() {
             @Override
             public void success(Places p, Response response) {
@@ -47,5 +50,10 @@ public class Pelias {
                 callback.failure(error);
             }
         });
+    }
+
+    public static void onFailure(Context context, RetrofitError error) {
+        System.out.println("Failure: " + error.toString() + ". Url: " + error.getUrl());
+        Toast.makeText(context, "Could not fetch autocomplete data", Toast.LENGTH_SHORT).show();
     }
 }

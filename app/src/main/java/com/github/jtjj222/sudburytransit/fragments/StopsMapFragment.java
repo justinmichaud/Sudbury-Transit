@@ -3,11 +3,15 @@ package com.github.jtjj222.sudburytransit.fragments;
 import android.animation.TimeInterpolator;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -17,6 +21,8 @@ import com.github.jtjj222.sudburytransit.maps.BusStopOverlay;
 import com.github.jtjj222.sudburytransit.maps.BusStopOverlayItem;
 import com.github.jtjj222.sudburytransit.maps.RouteOverlay;
 import com.github.jtjj222.sudburytransit.models.MyBus;
+import com.github.jtjj222.sudburytransit.models.Pelias;
+import com.github.jtjj222.sudburytransit.models.Place;
 import com.github.jtjj222.sudburytransit.models.Route;
 import com.github.jtjj222.sudburytransit.models.SimpleDiskCache;
 import com.github.jtjj222.sudburytransit.models.Stop;
@@ -51,6 +57,9 @@ public class StopsMapFragment extends Fragment {
 
     private ArrayList<Route> routes = new ArrayList<>();
     private ArrayList<Stop> stops = new ArrayList<>();
+
+    private ArrayList<String> placeLocations = new ArrayList<>();
+
     private SimpleDiskCache cache;
 
     public MapView map;
@@ -101,6 +110,24 @@ public class StopsMapFragment extends Fragment {
                 if (((ToggleButton) view).isChecked()) busStopOverlay.setEnabled(true);
                 else busStopOverlay.setEnabled(false);
                 map.invalidate();
+            }
+        });
+
+        final AutoCompleteTextView fromText = (AutoCompleteTextView) view.findViewById(R.id.fromEditText);
+
+        fromText.addTextChangedListener(new TextWatcher() {
+
+            public void afterTextChanged(Editable s) {
+            }
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                getLocationFromAddress(fromText.getText().toString(), view);
+                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                        parent.getContext(),
+                        android.R.layout.simple_list_item_1,
+                        placeLocations);
             }
         });
 
@@ -162,8 +189,18 @@ public class StopsMapFragment extends Fragment {
         return view;
     }
 
-    public void getLocationFromAddress() {
+    public void getLocationFromAddress(String search, final View parent) {
+        Pelias.getSuggestedLocations(search, new Callback<ArrayList<Place>>() {
+            @Override
+            public void success(ArrayList<Place> places, Response response) {
+                for (Place p : places) placeLocations.add(p.houseNumber + " " + p.street + ", " + p.city + ", " + p.state + ", " + p.country);
+            }
 
+            @Override
+            public void failure(RetrofitError error) {
+                Pelias.onFailure(parent.getContext(), error);
+            }
+        });
     }
 
     @Override
