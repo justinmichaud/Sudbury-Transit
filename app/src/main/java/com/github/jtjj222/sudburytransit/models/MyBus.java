@@ -207,10 +207,9 @@ public class MyBus {
         else {
             ArrayList<Stop> stops = new ArrayList<>();
             stops.addAll((List<Stop>) o);
+            invalidateCacheIfTooOld(cache);
             callback.success(stops, null);
         }
-
-        invalidateCacheIfTooOld(cache);
     }
 
     public static void loadRoutes(final Context context, final SimpleDiskCache cache,
@@ -223,10 +222,9 @@ public class MyBus {
         else {
             ArrayList<Route> routes = new ArrayList<>();
             routes.addAll((List<Route>) o);
+            invalidateCacheIfTooOld(cache);
             callback.success(routes, null);
         }
-
-        invalidateCacheIfTooOld(cache);
     }
 
 }

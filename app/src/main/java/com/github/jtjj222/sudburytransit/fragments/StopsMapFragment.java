@@ -165,8 +165,9 @@ public class StopsMapFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
+        System.out.println("On stop");
         try {
-            cache.getCache().close();
+            cache.closeAllDirs();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -214,8 +215,10 @@ public class StopsMapFragment extends Fragment {
     }
 
     private void onDataLoaded() {
-        if (routesLoaded && stopsLoaded)
+        if (routesLoaded && stopsLoaded) {
             view.findViewById(R.id.loading).setVisibility(View.GONE);
+            System.out.println("Data loaded!");
+        }
     }
 
     @Override

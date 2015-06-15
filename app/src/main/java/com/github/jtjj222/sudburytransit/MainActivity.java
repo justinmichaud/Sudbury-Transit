@@ -15,11 +15,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Placeholder for now, plan to replace this activity with a
-        // material design nav drawer
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, new StopsMapFragment())
-                .commit();
+        if (savedInstanceState == null) {
+            //If this wasn't an orientation/configuration change
+
+            // Placeholder for now, plan to replace this activity with a
+            // material design nav drawer
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, new StopsMapFragment())
+                    .commit();
+        }
 
     }
 

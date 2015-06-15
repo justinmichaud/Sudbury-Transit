@@ -36,7 +36,14 @@
             android:orientation="vertical"
             android:id="@+id/searchDrawer"
             android:background="@color/brand_main"
-            android:gravity="right">
+            android:translationY="-10000dp"
+            android:gravity="end">
+
+            <!-- Dummy item to prevent edit text from receiving focus -->
+            <!-- http://stackoverflow.com/questions/1555109/stop-edittext-from-gaining-focus-at-activity-startup -->
+            <LinearLayout
+                android:focusable="true" android:focusableInTouchMode="true"
+                android:layout_width="0px" android:layout_height="0px"/>
 
             <EditText
                 android:layout_width="match_parent"

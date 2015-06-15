@@ -67,6 +67,11 @@ public class SimpleDiskCache {
 		diskLruCache = DiskLruCache.open(dir, mAppVersion, 2, maxSize);
 	}
 
+	public void closeAllDirs() throws IOException {
+		diskLruCache.close();
+        usedDirs.clear();
+	}
+
 	public DiskLruCache getCache() {
 		return diskLruCache;
 	}
