@@ -200,8 +200,6 @@ public class MyBus {
 
     public static void loadStops(final Context context, final SimpleDiskCache cache,
                                  final Callback<ArrayList<Stop>> callback) {
-        invalidateCacheIfTooOld(cache);
-
         Object o = loadFromCache(cache, "stops");
         if (o == null || !(o instanceof List)) {
             requestStops(context, cache, callback);
@@ -211,11 +209,12 @@ public class MyBus {
             stops.addAll((List<Stop>) o);
             callback.success(stops, null);
         }
+
+        invalidateCacheIfTooOld(cache);
     }
 
     public static void loadRoutes(final Context context, final SimpleDiskCache cache,
                                  final Callback<ArrayList<Route>> callback) {
-        invalidateCacheIfTooOld(cache);
 
         Object o = loadFromCache(cache, "routes");
         if (o == null || !(o instanceof List)) {
@@ -226,6 +225,8 @@ public class MyBus {
             routes.addAll((List<Route>) o);
             callback.success(routes, null);
         }
+
+        invalidateCacheIfTooOld(cache);
     }
 
 }

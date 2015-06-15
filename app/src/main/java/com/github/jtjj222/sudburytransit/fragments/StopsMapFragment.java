@@ -59,10 +59,14 @@ public class StopsMapFragment extends Fragment {
     private boolean searchDrawerOpened = false;
     private TimeInterpolator interpolator = null; //type of animation see@developer.android.com/reference/android/animation/TimeInterpolator.html
 
+    public boolean stopsLoaded = false, routesLoaded = false;
+
+    private View view = null;
+
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup parent, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final View view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
+        view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
 
         searchDrawer = (LinearLayout) view.findViewById(R.id.searchDrawer);
         interpolator = new AccelerateDecelerateInterpolator();
@@ -182,6 +186,9 @@ public class StopsMapFragment extends Fragment {
                 for (Stop s : stops) busStopOverlay.addItem(new BusStopOverlayItem(s));
                 focusClosestStop(myLocationOverlay.getMyLocation());
                 map.invalidate();
+
+                stopsLoaded = true;
+                onDataLoaded();
             }
 
             @Override
@@ -194,6 +201,9 @@ public class StopsMapFragment extends Fragment {
             @Override
             public void success(ArrayList<Route> routes, Response response) {
                 StopsMapFragment.this.routes = routes;
+
+                routesLoaded = true;
+                onDataLoaded();
             }
 
             @Override
@@ -201,6 +211,11 @@ public class StopsMapFragment extends Fragment {
                 MyBus.onFailure(parent.getContext(), error);
             }
         });
+    }
+
+    private void onDataLoaded() {
+        if (routesLoaded && stopsLoaded)
+            view.findViewById(R.id.loading).setVisibility(View.GONE);
     }
 
     @Override
@@ -495,7 +510,7 @@ public class StopsMapFragment extends Fragment {
 //            }
         }
 
-        ((TextView) getView().findViewById(R.id.txtDirections)).setText(directions.toString());
+        ((TextView) view.findViewById(R.id.txtDirections)).setText(directions.toString());
 
         visualizePaths(pathsFound);
     }
