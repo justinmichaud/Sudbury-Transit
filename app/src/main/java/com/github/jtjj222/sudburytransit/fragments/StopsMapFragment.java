@@ -162,6 +162,10 @@ public class StopsMapFragment extends Fragment {
         return view;
     }
 
+    public void getLocationFromAddress() {
+
+    }
+
     @Override
     public void onStop() {
         super.onStop();
