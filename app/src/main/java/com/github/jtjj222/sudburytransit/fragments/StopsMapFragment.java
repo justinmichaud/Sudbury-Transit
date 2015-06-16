@@ -142,7 +142,7 @@ public class StopsMapFragment extends Fragment {
                         for (Place p : places) {
                             PlaceProperties pr = p.properties;
                             placeLocations.add((pr.houseNumber != null ? pr.houseNumber + " " : "")
-                                    + (pr.houseNumber != null ? pr.houseNumber + ", " : "")
+                                    + (pr.street != null ? pr.street + ", " : "")
                                     + (pr.city != null ? pr.city + " " : "")
                                     + (pr.state != null ? pr.state + ", " : "")
                                     + (pr.country != null ? pr.country : ""));
@@ -228,8 +228,8 @@ public class StopsMapFragment extends Fragment {
         view.findViewById(R.id.btnViewDirections).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                navigate(new GeoPoint(from.geometry.coordinates[0],from.geometry.coordinates[1]),
-                        new GeoPoint(to.geometry.coordinates[0],to.geometry.coordinates[1]));
+                if(from != null && to != null) { navigate(new GeoPoint(from.geometry.coordinates[0],from.geometry.coordinates[1]),
+                        new GeoPoint(to.geometry.coordinates[0],to.geometry.coordinates[1])); }
             }
         });
 
