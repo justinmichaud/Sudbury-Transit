@@ -79,6 +79,7 @@ public class StopsMapFragment extends Fragment {
     private View view = null;
 
     // TODO add a swap button to the search.
+    // TODO reverse geocoding, nav button on edittext fields to geocode.
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup parent, Bundle savedInstanceState) {
