@@ -30,17 +30,19 @@ public class Pelias {
 
     public static PeliasService getService() {
         return new RestAdapter.Builder()
-                .setEndpoint("http://photon.komoot.de/api/")
+                .setEndpoint("http://photon.komoot.de/api")
                 .build()
                 .create(PeliasService.class);
     }
 
     public static void getSuggestedLocations(String partialSearch, final Callback<ArrayList<Place>> callback) {
-        getService().suggestLocations(partialSearch, new Callback<Places>() {
+        getService().suggestLocations(partialSearch, "46.491271667182488", "-80.988006619736623", new Callback<Places>() {
             @Override
             public void success(Places p, Response response) {
                 ArrayList<Place> places = new ArrayList<>();
                 places.addAll(p.places);
+
+                // What do we do with the places?
 
                 callback.success(places, null);
             }
