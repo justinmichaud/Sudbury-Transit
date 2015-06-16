@@ -54,7 +54,10 @@
                 android:background="@null"
                 android:hint="From"
                 android:paddingTop="25dp"
-                android:paddingBottom="25dp"/>
+                android:paddingBottom="25dp"
+                android:singleLine="true"
+                android:lines="1"
+                android:maxLines="1"/>
 
             <View
                 android:layout_width="match_parent"
@@ -70,7 +73,10 @@
                 android:background="@null"
                 android:hint="Destination"
                 android:paddingTop="25dp"
-                android:paddingBottom="25dp"/>
+                android:paddingBottom="25dp"
+                android:singleLine="true"
+                android:lines="1"
+                android:maxLines="1"/>
 
             <com.gc.materialdesign.views.ButtonFlat
                 android:id="@+id/btnViewDirections"

@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.LinearLayout;
@@ -60,9 +61,14 @@ public class StopsMapFragment extends Fragment {
     private ArrayList<Route> routes = new ArrayList<>();
     private ArrayList<Stop> stops = new ArrayList<>();
 
+    private List<Place> placesFound = new ArrayList<>();
+
     private SimpleDiskCache cache;
 
     public MapView map;
+
+    private Place from = null;
+    private Place to = null;
 
     private LinearLayout searchDrawer = null;
     private boolean searchDrawerOpened = false;
@@ -71,6 +77,8 @@ public class StopsMapFragment extends Fragment {
     public boolean stopsLoaded = false, routesLoaded = false;
 
     private View view = null;
+
+    // TODO add a swap button to the search.
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup parent, Bundle savedInstanceState) {
@@ -116,7 +124,6 @@ public class StopsMapFragment extends Fragment {
         final AutoCompleteTextView fromText = (AutoCompleteTextView) view.findViewById(R.id.fromEditText);
 
         fromText.addTextChangedListener(new TextWatcher() {
-
             public void afterTextChanged(Editable s) {
             }
 
@@ -129,6 +136,8 @@ public class StopsMapFragment extends Fragment {
                     public void success(List<Place> places, Response response) {
                         if (places == null) return;
                         ArrayList<String> placeLocations = new ArrayList<>();
+
+                        placesFound = places;
 
                         for (Place p : places) {
                             PlaceProperties pr = p.properties;
@@ -157,11 +166,70 @@ public class StopsMapFragment extends Fragment {
             }
         });
 
+        fromText.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                from = placesFound.get(position);
+            }
+        });
+
+        final AutoCompleteTextView toText = (AutoCompleteTextView) view.findViewById(R.id.toEditText);
+
+        toText.addTextChangedListener(new TextWatcher() {
+            public void afterTextChanged(Editable s) {
+            }
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                Pelias.getSuggestedLocations(toText.getText().toString(), new Callback<List<Place>>() {
+                    @Override
+                    public void success(List<Place> places, Response response) {
+                        if (places == null) return;
+                        ArrayList<String> placeLocations = new ArrayList<>();
+
+                        placesFound = places;
+
+                        for (Place p : places) {
+                            PlaceProperties pr = p.properties;
+                            placeLocations.add((pr.houseNumber != null ? pr.houseNumber + " " : "")
+                                    + (pr.houseNumber != null ? pr.houseNumber + ", " : "")
+                                    + (pr.city != null ? pr.city + " " : "")
+                                    + (pr.state != null ? pr.state + ", " : "")
+                                    + (pr.country != null ? pr.country : ""));
+                        }
+
+                        System.out.println(placeLocations);
+
+                        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
+                                view.getContext(),
+                                android.R.layout.simple_dropdown_item_1line,
+                                placeLocations);
+                        toText.setAdapter(arrayAdapter);
+                        toText.showDropDown();
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+                        Pelias.onFailure(parent.getContext(), error);
+                    }
+                });
+            }
+        });
+
+        toText.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                to = placesFound.get(position);
+            }
+        });
+
         view.findViewById(R.id.btnViewDirections).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO Alec replace this with results from search fields
-                navigate(new GeoPoint(46.4886476,-80.9351185), new GeoPoint(46.4692213,-81.0247679));
+                navigate(new GeoPoint(from.geometry.coordinates[0],from.geometry.coordinates[1]),
+                        new GeoPoint(to.geometry.coordinates[0],to.geometry.coordinates[1]));
             }
         });
 
