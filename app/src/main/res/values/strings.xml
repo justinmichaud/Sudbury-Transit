@@ -12,5 +12,6 @@
     <string name="view_directions">Directions</string>
     <string name="action_search">Search</string>
     <string name="toggle_stops">Stops</string>
+    <string name="go_button">Go</string>
 
 </resources>

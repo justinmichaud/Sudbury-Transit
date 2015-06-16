@@ -45,6 +45,9 @@
                 android:focusable="true" android:focusableInTouchMode="true"
                 android:layout_width="0px" android:layout_height="0px"/>
 
+            <!-- These are hidden for now until we get extra data from the city
+            to make navigation work -->
+            <!--
             <AutoCompleteTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -98,7 +101,32 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/light"
                     android:id="@+id/txtDirections"/>
-            </ScrollView>
+            </ScrollView> -->
+
+            <AutoCompleteTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/light"
+                android:textColorHint="@color/light"
+                android:id="@+id/searchEditText"
+                android:background="@null"
+                android:hint="Go To Location"
+                android:paddingTop="25dp"
+                android:paddingBottom="25dp"
+                android:singleLine="true"
+                android:lines="1"
+                android:maxLines="1"/>
+
+            <com.gc.materialdesign.views.ButtonFlat
+                android:id="@+id/btnGoSearch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/go_button"
+                android:background="@android:color/white"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"/>
 
         </LinearLayout>
 
