@@ -10,6 +10,6 @@ import retrofit.http.Query;
 public interface PeliasService {
 
     @GET("/")
-    void suggestLocations(@Query("q") String partialSearch, @Query("lat") String lat, @Query("lon") String lon, Callback<Places> callback);
+    void suggestLocations(@Query("q") String partialSearch, @Query("lat") String lat, @Query("lon") String lon, Callback<Features> callback);
 
 }

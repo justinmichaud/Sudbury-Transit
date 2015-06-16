@@ -23,6 +23,7 @@ import com.github.jtjj222.sudburytransit.maps.RouteOverlay;
 import com.github.jtjj222.sudburytransit.models.MyBus;
 import com.github.jtjj222.sudburytransit.models.Pelias;
 import com.github.jtjj222.sudburytransit.models.Place;
+import com.github.jtjj222.sudburytransit.models.PlaceProperties;
 import com.github.jtjj222.sudburytransit.models.Route;
 import com.github.jtjj222.sudburytransit.models.SimpleDiskCache;
 import com.github.jtjj222.sudburytransit.models.Stop;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -57,8 +59,6 @@ public class StopsMapFragment extends Fragment {
 
     private ArrayList<Route> routes = new ArrayList<>();
     private ArrayList<Stop> stops = new ArrayList<>();
-
-    private ArrayList<String> placeLocations = new ArrayList<>();
 
     private SimpleDiskCache cache;
 
@@ -120,14 +120,40 @@ public class StopsMapFragment extends Fragment {
             public void afterTextChanged(Editable s) {
             }
 
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                getLocationFromAddress(fromText.getText().toString(), view);
-                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
-                        parent.getContext(),
-                        android.R.layout.simple_list_item_1,
-                        placeLocations);
+                Pelias.getSuggestedLocations(fromText.getText().toString(), new Callback<List<Place>>() {
+                    @Override
+                    public void success(List<Place> places, Response response) {
+                        if (places == null) return;
+                        ArrayList<String> placeLocations = new ArrayList<>();
+
+                        for (Place p : places) {
+                            PlaceProperties pr = p.properties;
+                            placeLocations.add((pr.houseNumber != null ? pr.houseNumber + " " : "")
+                                    + (pr.houseNumber != null ? pr.houseNumber + ", " : "")
+                                    + (pr.city != null ? pr.city + " " : "")
+                                    + (pr.state != null ? pr.state + ", " : "")
+                                    + (pr.country != null ? pr.country : ""));
+                        }
+
+                        System.out.println(placeLocations);
+
+                        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
+                                view.getContext(),
+                                android.R.layout.simple_dropdown_item_1line,
+                                placeLocations);
+                        fromText.setAdapter(arrayAdapter);
+                        fromText.showDropDown();
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+                        Pelias.onFailure(parent.getContext(), error);
+                    }
+                });
             }
         });
 
@@ -189,18 +215,8 @@ public class StopsMapFragment extends Fragment {
         return view;
     }
 
-    public void getLocationFromAddress(String search, final View parent) {
-        Pelias.getSuggestedLocations(search, new Callback<ArrayList<Place>>() {
-            @Override
-            public void success(ArrayList<Place> places, Response response) {
-                for (Place p : places) placeLocations.add(p.houseNumber + " " + p.street + ", " + p.city + ", " + p.state + ", " + p.country);
-            }
+    public void getLocationFromAddress(String search, final View parent, Runnable callback) {
 
-            @Override
-            public void failure(RetrofitError error) {
-                Pelias.onFailure(parent.getContext(), error);
-            }
-        });
     }
 
     @Override
