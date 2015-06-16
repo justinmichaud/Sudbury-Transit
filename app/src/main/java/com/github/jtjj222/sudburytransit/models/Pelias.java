@@ -17,7 +17,7 @@ public class Pelias {
 
     public static PeliasService getService() {
         return new RestAdapter.Builder()
-                .setEndpoint("http://photon.komoot.de/api")
+                .setEndpoint("http://pelias.mapzen.com")
                 .build()
                 .create(PeliasService.class);
     }

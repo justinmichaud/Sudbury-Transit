@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -58,17 +57,15 @@ public class StopsMapFragment extends Fragment {
     public RouteOverlay routeOverlay;
     public MyLocationNewOverlay myLocationOverlay;
 
+    public MapView map;
+
     private ArrayList<Route> routes = new ArrayList<>();
     private ArrayList<Stop> stops = new ArrayList<>();
 
-    private List<Place> placesFound = new ArrayList<>();
-
+    private View view = null;
     private SimpleDiskCache cache;
 
-    public MapView map;
-
-    private Place from = null;
-    private Place to = null;
+    private GeoCodingSearchSuggestionsHandler fromSuggestions, toSuggestions, searchSuggestions;
 
     private LinearLayout searchDrawer = null;
     private boolean searchDrawerOpened = false;
@@ -76,7 +73,96 @@ public class StopsMapFragment extends Fragment {
 
     public boolean stopsLoaded = false, routesLoaded = false;
 
-    private View view = null;
+    private SlidingUpPanelLayout.PanelSlideListener panelSlideListener = new SlidingUpPanelLayout.PanelSlideListener() {
+        double lastOffset = 1.0;
+
+        @Override
+        public void onPanelSlide(View panel, float slideOffset) {
+            if (slideOffset < lastOffset) {
+                ((SlidingUpPanelLayout) view).setPanelHeight(0);
+                ((SlidingUpPanelLayout) view).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+                busStopOverlay.setFocus(null);
+            }
+            lastOffset = slideOffset;
+        }
+
+        @Override
+        public void onPanelExpanded(View panel) {
+        }
+
+        @Override
+        public void onPanelCollapsed(View panel) {
+        }
+
+        @Override
+        public void onPanelAnchored(View panel) {
+        }
+
+        @Override
+        public void onPanelHidden(View panel) {
+        }
+    };
+
+    private class GeoCodingSearchSuggestionsHandler implements TextWatcher, AdapterView.OnItemClickListener {
+
+        public AutoCompleteTextView textView;
+        public Place selectedPlace;
+        public List<Place> placesFound;
+
+        //To prevent the text changed listener from firing once you select an item
+        private boolean itemWasJustSelected = false;
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (parent.getAdapter().getCount() != placesFound.size()) return;
+            selectedPlace = placesFound.get(position);
+            itemWasJustSelected = true;
+        }
+
+        public GeoCodingSearchSuggestionsHandler(AutoCompleteTextView fromText) {
+            this.textView = fromText;
+        }
+
+        public void afterTextChanged(Editable s) {
+        }
+
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            if (itemWasJustSelected) {
+                itemWasJustSelected = false;
+                return;
+            }
+
+            selectedPlace = null;
+            Pelias.getSuggestedLocations(textView.getText().toString(), new Callback<List<Place>>() {
+                @Override
+                public void success(List<Place> places, Response response) {
+                    if (places == null || selectedPlace != null) return;
+                    placesFound = new ArrayList<>(places);
+
+                    ArrayList<String> placeLocations = new ArrayList<>();
+
+                    for (Place p : placesFound) {
+                        placeLocations.add(p.properties.text);
+                    }
+
+                    ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
+                            view.getContext(),
+                            android.R.layout.simple_dropdown_item_1line,
+                            placeLocations);
+                    textView.setAdapter(arrayAdapter);
+                    textView.showDropDown();
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    Pelias.onFailure(textView.getContext(), error);
+                }
+            });
+        }
+    }
 
     // TODO add a swap button to the search.
     // TODO reverse geocoding, nav button on edittext fields to geocode.
@@ -86,9 +172,11 @@ public class StopsMapFragment extends Fragment {
         super.onCreate(savedInstanceState);
         view = inflater.inflate(R.layout.fragment_stops_map, parent, false);
 
+        ((SlidingUpPanelLayout) view).setPanelSlideListener(panelSlideListener);
         searchDrawer = (LinearLayout) view.findViewById(R.id.searchDrawer);
         interpolator = new AccelerateDecelerateInterpolator();
 
+        //Once it has been drawn/measured at least once, we can get its height
         searchDrawer.post(new Runnable() {
             @Override
             public void run() {
@@ -99,7 +187,6 @@ public class StopsMapFragment extends Fragment {
         setHasOptionsMenu(true);
 
         map = (MapView) view.findViewById(R.id.map);
-        //TODO replace with our own tiles
         map.setTileSource(TileSourceFactory.MAPNIK);
 
         map.setBuiltInZoomControls(false);
@@ -122,117 +209,15 @@ public class StopsMapFragment extends Fragment {
             }
         });
 
-        final AutoCompleteTextView fromText = (AutoCompleteTextView) view.findViewById(R.id.fromEditText);
+        AutoCompleteTextView fromText = (AutoCompleteTextView) view.findViewById(R.id.fromEditText);
+        fromSuggestions = new GeoCodingSearchSuggestionsHandler(fromText);
+        fromText.addTextChangedListener(fromSuggestions);
+        fromText.setOnItemClickListener(fromSuggestions);
 
-        fromText.addTextChangedListener(new TextWatcher() {
-            public void afterTextChanged(Editable s) {
-            }
-
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Pelias.getSuggestedLocations(fromText.getText().toString(), new Callback<List<Place>>() {
-                    @Override
-                    public void success(List<Place> places, Response response) {
-                        if (places == null) return;
-                        ArrayList<String> placeLocations = new ArrayList<>();
-
-                        placesFound = places;
-
-                        for (Place p : places) {
-                            PlaceProperties pr = p.properties;
-                            placeLocations.add((pr.houseNumber != null ? pr.houseNumber + " " : "")
-                                    + (pr.street != null ? pr.street + ", " : "")
-                                    + (pr.city != null ? pr.city + " " : "")
-                                    + (pr.state != null ? pr.state + ", " : "")
-                                    + (pr.country != null ? pr.country : ""));
-                        }
-
-                        System.out.println(placeLocations);
-
-                        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
-                                view.getContext(),
-                                android.R.layout.simple_dropdown_item_1line,
-                                placeLocations);
-                        fromText.setAdapter(arrayAdapter);
-                        fromText.showDropDown();
-                    }
-
-                    @Override
-                    public void failure(RetrofitError error) {
-                        Pelias.onFailure(parent.getContext(), error);
-                    }
-                });
-            }
-        });
-
-        fromText.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                from = placesFound.get(position);
-            }
-        });
-
-        final AutoCompleteTextView toText = (AutoCompleteTextView) view.findViewById(R.id.toEditText);
-
-        toText.addTextChangedListener(new TextWatcher() {
-            public void afterTextChanged(Editable s) {
-            }
-
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Pelias.getSuggestedLocations(toText.getText().toString(), new Callback<List<Place>>() {
-                    @Override
-                    public void success(List<Place> places, Response response) {
-                        if (places == null) return;
-                        ArrayList<String> placeLocations = new ArrayList<>();
-
-                        placesFound = places;
-
-                        for (Place p : places) {
-                            PlaceProperties pr = p.properties;
-                            placeLocations.add((pr.houseNumber != null ? pr.houseNumber + " " : "")
-                                    + (pr.houseNumber != null ? pr.houseNumber + ", " : "")
-                                    + (pr.city != null ? pr.city + " " : "")
-                                    + (pr.state != null ? pr.state + ", " : "")
-                                    + (pr.country != null ? pr.country : ""));
-                        }
-
-                        System.out.println(placeLocations);
-
-                        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
-                                view.getContext(),
-                                android.R.layout.simple_dropdown_item_1line,
-                                placeLocations);
-                        toText.setAdapter(arrayAdapter);
-                        toText.showDropDown();
-                    }
-
-                    @Override
-                    public void failure(RetrofitError error) {
-                        Pelias.onFailure(parent.getContext(), error);
-                    }
-                });
-            }
-        });
-
-        toText.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                to = placesFound.get(position);
-            }
-        });
-
-        view.findViewById(R.id.btnViewDirections).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(from != null && to != null) { navigate(new GeoPoint(from.geometry.coordinates[0],from.geometry.coordinates[1]),
-                        new GeoPoint(to.geometry.coordinates[0],to.geometry.coordinates[1])); }
-            }
-        });
+        AutoCompleteTextView toText = (AutoCompleteTextView) view.findViewById(R.id.toEditText);
+        toSuggestions = new GeoCodingSearchSuggestionsHandler(toText);
+        toText.addTextChangedListener(toSuggestions);
+        toText.setOnItemClickListener(toSuggestions);
 
         // When we get the location or we get the list of stops (whichever comes last)
         // we move the map to their location (if they haven't already selected a stop)
@@ -249,43 +234,32 @@ public class StopsMapFragment extends Fragment {
         });
         map.getOverlays().add(myLocationOverlay);
 
-        loadData(parent);
-
-        ((SlidingUpPanelLayout) view).setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
-            double lastOffset = 1.0;
-
+        view.findViewById(R.id.btnViewDirections).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onPanelSlide(View panel, float slideOffset) {
-                if (slideOffset < lastOffset) {
-                    ((SlidingUpPanelLayout) view).setPanelHeight(0);
-                    ((SlidingUpPanelLayout) view).setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-                    busStopOverlay.setFocus(null);
+            public void onClick(View view) {
+                Place from = fromSuggestions.selectedPlace;
+                Place to = toSuggestions.selectedPlace;
+
+                if (from == null) {
+                    if (fromSuggestions.placesFound == null
+                            || fromSuggestions.placesFound.size() < 1) return;
+                    from = fromSuggestions.placesFound.get(0);
                 }
-                lastOffset = slideOffset;
-            }
 
-            @Override
-            public void onPanelExpanded(View panel) {
-            }
+                if (to == null) {
+                    if (toSuggestions.placesFound == null
+                            || toSuggestions.placesFound.size() < 1) return;
+                    to = toSuggestions.placesFound.get(0);
+                }
 
-            @Override
-            public void onPanelCollapsed(View panel) {
-            }
-
-            @Override
-            public void onPanelAnchored(View panel) {
-            }
-
-            @Override
-            public void onPanelHidden(View panel) {
+                navigate(new GeoPoint(from.geometry.coordinates[0], from.geometry.coordinates[1]),
+                        new GeoPoint(to.geometry.coordinates[0], to.geometry.coordinates[1]));
             }
         });
 
+        loadData(parent);
+
         return view;
-    }
-
-    public void getLocationFromAddress(String search, final View parent, Runnable callback) {
-
     }
 
     @Override
@@ -403,12 +377,12 @@ public class StopsMapFragment extends Fragment {
     }
 
     // We do k shortest path graph search on a digraph,
-    // where each available route forms an edge from one stop to another
+    // where each available route forms an edge selectedPlace one stop to another
     // This is done so that it can recommend transfers at places other
     // than the transit terminal
 
-    // When we get timing data from the city, timing will be used in the weights
-    // The graph also contains nodes for the from and to locations, with
+    // When we get timing data selectedPlace the city, timing will be used in the weights
+    // The graph also contains nodes for the selectedPlace and to locations, with
     // the distance being the weight
 
     protected static class RouteEdge {
@@ -455,7 +429,7 @@ public class StopsMapFragment extends Fragment {
     private RouteGraph buildRouteGraph() {
         RouteGraph graph = new RouteGraph();
 
-        //Until we can get order data from the city,
+        //Until we can get order data selectedPlace the city,
         //this directed graph will be wrong
         for (Route route : routes) {
 
@@ -478,7 +452,7 @@ public class StopsMapFragment extends Fragment {
         return graph;
     }
 
-    //Copied from GeopPoint
+    //Copied selectedPlace GeopPoint
     private static float dist(double latA, double longA, double latB, double longB) {
         final double a1 = GeoPoint.DEG2RAD * latA;
         final double a2 = GeoPoint.DEG2RAD * longA;
@@ -520,7 +494,7 @@ public class StopsMapFragment extends Fragment {
     //K shortest path algorithm
     private void navigate(GeoPoint fromPoint, GeoPoint toPoint) {
 
-        int K = 5; //TODO load from preference; Max number of routes to find
+        int K = 5; //TODO load selectedPlace preference; Max number of routes to find
 
         //TODO refine the weighting to allow specifying whether or not you are willing to walk
         //TODO fix this method returning multiple redundant routes with the same bus
@@ -611,7 +585,7 @@ public class StopsMapFragment extends Fragment {
                 if (i != 0 && path[i].route.equals(path[i-1].route)) continue;
 
                 if (path[i].route.equals("Walking")) {
-                    directions.append("- Walk from stop ").append(path[i].a.number)
+                    directions.append("- Walk selectedPlace stop ").append(path[i].a.number)
                         .append(" ").append(path[i].a.name).append(" to stop ")
                         .append(path[i].b.number).append(" ").append(path[i].b.name)
                         .append("\n");
@@ -634,7 +608,7 @@ public class StopsMapFragment extends Fragment {
 
             //debugging
 //            for (RouteEdge e : path) {
-//                System.out.println("Go from " + e.a.number + " " + e.a.name + " to "
+//                System.out.println("Go selectedPlace " + e.a.number + " " + e.a.name + " to "
 //                    + e.b.number + " " + e.b.name + " via " + e.route);
 //            }
         }

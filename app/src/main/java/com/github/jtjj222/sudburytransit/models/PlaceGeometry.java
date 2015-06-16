@@ -6,5 +6,4 @@ package com.github.jtjj222.sudburytransit.models;
 public class PlaceGeometry {
 
     public double[] coordinates;
-
 }
