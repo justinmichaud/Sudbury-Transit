@@ -94,20 +94,28 @@ public class StopsMapFragment extends Fragment {
         }
     };
 
+    private class SearchSuggestion {
+        Stop stop;
+        Place place;
+    }
+
     private class GeoCodingSearchSuggestionsHandler implements TextWatcher, AdapterView.OnItemClickListener {
 
-        public AutoCompleteTextView textView;
-        public Place selectedPlace;
-        public List<Place> placesFound;
-
-        //To prevent the text changed listener from firing once you select an item
-        private boolean itemWasJustSelected = false;
+        public final AutoCompleteTextView textView;
+        public SearchSuggestion selectedPlace;
+        public final List<SearchSuggestion> placesFound = new ArrayList<>();
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (parent.getAdapter().getCount() != placesFound.size()) return;
-            selectedPlace = placesFound.get(position);
-            itemWasJustSelected = true;
+            synchronized (placesFound) {
+                if (parent.getAdapter().getCount() != placesFound.size()
+                        || position >= placesFound.size()) {
+                    System.out.println("Invalid item click, placesFound.size is " + placesFound.size());
+                    return;
+                }
+
+                selectedPlace = placesFound.get(position);
+            }
         }
 
         public GeoCodingSearchSuggestionsHandler(AutoCompleteTextView fromText) {
@@ -115,36 +123,37 @@ public class StopsMapFragment extends Fragment {
         }
 
         public void afterTextChanged(Editable s) {
+            if (textView.isPerformingCompletion()) return;
+
+            placesFound.clear();
+            selectedPlace = null;
+
+            addStopSuggestions();
+            addAddressSuggestions();
         }
 
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
 
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-            if (itemWasJustSelected) {
-                itemWasJustSelected = false;
-                return;
-            }
 
-            selectedPlace = null;
+        }
+
+        private void addAddressSuggestions() {
             Pelias.getSuggestedLocations(textView.getText().toString(), new Callback<List<Place>>() {
                 @Override
                 public void success(List<Place> places, Response response) {
                     if (places == null || selectedPlace != null) return;
-                    placesFound = new ArrayList<>(places);
 
-                    ArrayList<String> placeLocations = new ArrayList<>();
-
-                    for (Place p : placesFound) {
-                        placeLocations.add(p.properties.text);
+                    synchronized (placesFound) {
+                        for (Place p : places) {
+                            SearchSuggestion s = new SearchSuggestion();
+                            s.place = p;
+                            placesFound.add(s);
+                        }
                     }
 
-                    ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
-                            view.getContext(),
-                            android.R.layout.simple_dropdown_item_1line,
-                            placeLocations);
-                    textView.setAdapter(arrayAdapter);
-                    textView.showDropDown();
+                    onUpdatedSuggestions();
                 }
 
                 @Override
@@ -153,10 +162,47 @@ public class StopsMapFragment extends Fragment {
                 }
             });
         }
+
+        private void addStopSuggestions() {
+            if (selectedPlace != null) return;
+
+            synchronized (placesFound) {
+                for (Stop s : stops) {
+                    if ((""+s.number).contains(textView.getText().toString())
+                            || s.name != null && s.name.contains(textView.getText().toString())) {
+                        SearchSuggestion searchSuggestion = new SearchSuggestion();
+                        searchSuggestion.stop = s;
+                        placesFound.add(searchSuggestion);
+                    }
+                }
+            }
+
+            onUpdatedSuggestions();
+        }
+
+        private void onUpdatedSuggestions() {
+            ArrayList<String> placeLocations = new ArrayList<>();
+
+            synchronized (placesFound) {
+                for (SearchSuggestion s : placesFound) {
+                    if (s.place != null)
+                        placeLocations.add(s.place.properties.text);
+                    else if (s.stop != null)
+                        placeLocations.add("Stop " + s.stop.number +
+                                ((s.stop.name != null && !s.stop.name.isEmpty())? ", " + s.stop.name : ""));
+                }
+
+                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
+                        view.getContext(),
+                        android.R.layout.simple_dropdown_item_1line,
+                        placeLocations);
+                textView.setAdapter(arrayAdapter);
+                textView.showDropDown();
+            }
+        }
     }
 
     // TODO add a swap button to the search.
-    // TODO reverse geocoding, nav button on edittext fields to geocode.
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup parent, Bundle savedInstanceState) {
@@ -256,7 +302,7 @@ public class StopsMapFragment extends Fragment {
         view.findViewById(R.id.btnGoSearch).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Place dest = searchSuggestions.selectedPlace;
+                SearchSuggestion dest = searchSuggestions.selectedPlace;
 
                 if (dest == null) {
                     if (searchSuggestions.placesFound == null
@@ -264,8 +310,22 @@ public class StopsMapFragment extends Fragment {
                     dest = searchSuggestions.placesFound.get(0);
                 }
 
-                map.getController().animateTo(new GeoPoint(dest.geometry.coordinates[1],
-                        dest.geometry.coordinates[0]));
+                if (dest.place != null) {
+                    map.getController().animateTo(new GeoPoint(dest.place.geometry.coordinates[1],
+                            dest.place.geometry.coordinates[0]));
+                }
+                else if (dest.stop != null) {
+                    map.getController().animateTo(new GeoPoint(dest.stop.latitude,
+                            dest.stop.longitude));
+
+                    for (int i=0; i<busStopOverlay.size(); i++) {
+                        if (busStopOverlay.getItem(i).getStop().number == dest.stop.number) {
+                            busStopOverlay.setFocus(busStopOverlay.getItem(i));
+                            break;
+                        }
+                    }
+                }
+
             }
         });
 

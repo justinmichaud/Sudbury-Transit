@@ -110,7 +110,7 @@
                 android:textColorHint="@color/light"
                 android:id="@+id/searchEditText"
                 android:background="@null"
-                android:hint="Go To Location"
+                android:hint="@string/location_hint"
                 android:paddingTop="25dp"
                 android:paddingBottom="25dp"
                 android:singleLine="true"
