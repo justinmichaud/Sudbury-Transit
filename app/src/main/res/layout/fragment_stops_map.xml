@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:textOn="@string/toggle_stops"
             android:textOff="@string/toggle_stops"
-            android:layout_gravity="end|top"
+            android:layout_gravity="end|bottom"
             android:id="@+id/tglStops"
             android:checked="true"/>
 
@@ -36,15 +36,14 @@
             android:orientation="vertical"
             android:id="@+id/searchDrawer"
             android:background="@color/brand_main"
-            android:translationY="-10000dp"
-            android:gravity="end">
+            android:translationY="-10000dp">
 
             <!-- Dummy item to prevent edit text from receiving focus -->
             <!-- http://stackoverflow.com/questions/1555109/stop-edittext-from-gaining-focus-at-activity-startup -->
             <LinearLayout
                 android:focusable="true" android:focusableInTouchMode="true"
                 android:layout_width="0px" android:layout_height="0px"/>
-
+            
             <AutoCompleteTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -89,30 +88,32 @@
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"/>
 
-            <AutoCompleteTextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/light"
-                android:textColorHint="@color/light"
-                android:id="@+id/searchEditText"
-                android:background="@null"
-                android:hint="@string/location_hint"
-                android:paddingTop="25dp"
-                android:paddingBottom="25dp"
-                android:singleLine="true"
-                android:lines="1"
-                android:maxLines="1"/>
+            <RelativeLayout
+                android:layout_height="50dp"
+                android:layout_width="match_parent">
 
-            <com.gc.materialdesign.views.ButtonFlat
-                android:id="@+id/btnGoSearch"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="@string/go_button"
-                android:background="@android:color/white"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"/>
+                <AutoCompleteTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/light"
+                    android:textColorHint="@color/light"
+                    android:id="@+id/searchEditText"
+                    android:background="@null"
+                    android:hint="@string/location_hint"
+                    android:singleLine="true"
+                    android:lines="1"
+                    android:layout_alignParentLeft="true"
+                    android:maxLines="1"/>
+
+                <com.gc.materialdesign.views.ButtonFlat
+                    android:id="@+id/btnGoSearch"
+                    android:layout_alignParentRight="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="@string/go_button"
+                    android:background="@android:color/white"/>
+
+            </RelativeLayout>
 
             <ScrollView
                 android:layout_width="match_parent"

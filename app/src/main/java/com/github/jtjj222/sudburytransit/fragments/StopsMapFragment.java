@@ -253,7 +253,7 @@ public class StopsMapFragment extends Fragment {
                 map.invalidate();
             }
         });
-
+        /*
         AutoCompleteTextView fromText = (AutoCompleteTextView) view.findViewById(R.id.fromEditText);
         fromSuggestions = new GeoCodingSearchSuggestionsHandler(fromText);
         fromText.addTextChangedListener(fromSuggestions);
@@ -263,6 +263,7 @@ public class StopsMapFragment extends Fragment {
         toSuggestions = new GeoCodingSearchSuggestionsHandler(toText);
         toText.addTextChangedListener(toSuggestions);
         toText.setOnItemClickListener(toSuggestions);
+        */
 
         AutoCompleteTextView searchText = (AutoCompleteTextView) view.findViewById(R.id.searchEditText);
         searchSuggestions = new GeoCodingSearchSuggestionsHandler(searchText);
@@ -284,6 +285,7 @@ public class StopsMapFragment extends Fragment {
         });
         map.getOverlays().add(myLocationOverlay);
 
+        /*
         view.findViewById(R.id.btnViewDirections).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -325,6 +327,7 @@ public class StopsMapFragment extends Fragment {
                 navigate(fromPoint, toPoint);
             }
         });
+        */
 
         view.findViewById(R.id.btnGoSearch).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -713,7 +716,7 @@ public class StopsMapFragment extends Fragment {
 //            }
         }
 
-        ((TextView) view.findViewById(R.id.txtDirections)).setText(directions.toString());
+        // ((TextView) view.findViewById(R.id.txtDirections)).setText(directions.toString());
 
         visualizePaths(pathsFound);
     }

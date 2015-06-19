@@ -13,6 +13,6 @@
     <string name="action_search">Search</string>
     <string name="toggle_stops">Stops</string>
     <string name="go_button">Go</string>
-    <string name="location_hint">Enter location or stop number</string>
+    <string name="location_hint">Enter location or stop #</string>
 
 </resources>
