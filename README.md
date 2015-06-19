@@ -3,6 +3,21 @@ Sudbury-Transit
 
 An unnofical, early development application that aims to provide a simple way to access information from the sudbury transit api on android, without any proprietary code.
 
+Features
+--------
+
+![Screenshot](Original Images and Mockups/v1-1.png)
+![Screenshot](Original Images and Mockups/v1-2.png)
+![Screenshot](Original Images and Mockups/v1-3.png)
+![Screenshot](Original Images and Mockups/v1-4.png)
+
+- View realtime bus arival estimates for stops
+- View stops on a map
+- Search for stops by name, number, or address
+
+Not quite ready:
+- Trip planning (we need route times from the city). The current code for this feature is in the dev branch.
+
 Building
 --------
 
