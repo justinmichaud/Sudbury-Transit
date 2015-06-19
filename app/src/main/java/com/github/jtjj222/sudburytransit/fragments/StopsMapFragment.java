@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -189,6 +190,8 @@ public class StopsMapFragment extends Fragment {
         }
 
         private void onUpdatedSuggestions() {
+            if (!StopsMapFragment.this.isVisible()) return;
+
             ArrayList<String> placeLocations = new ArrayList<>();
 
             synchronized (placesFound) {
@@ -205,9 +208,22 @@ public class StopsMapFragment extends Fragment {
                         android.R.layout.simple_dropdown_item_1line,
                         placeLocations);
                 textView.setAdapter(arrayAdapter);
-                textView.showDropDown();
+                try {
+                    textView.showDropDown();
+                    //Thrown when screen is rotated, for example
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        ((AutoCompleteTextView) view.findViewById(R.id.fromEditText)).dismissDropDown();
+        ((AutoCompleteTextView) view.findViewById(R.id.toEditText)).dismissDropDown();
+        ((AutoCompleteTextView) view.findViewById(R.id.searchEditText)).dismissDropDown();
     }
 
     // TODO add a swap button to the search.
