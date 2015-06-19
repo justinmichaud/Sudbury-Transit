@@ -1,4 +1,12 @@
-# Sudbury-Transit
+Sudbury-Transit
+---------------
+
+An unnofical, early development application that aims to provide a simple way to access information from the sudbury transit api on android, without any proprietary code.
+
+Building
+--------
+
+This project makes use of many great open source projects, including Osmdroid (open street map on android), pelias (for geocoding), slideuppanel, and retrofit (for accessing the json api).
 
 To build, add a file in res/values called prod.xml:
 
