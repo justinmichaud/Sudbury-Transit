@@ -443,10 +443,8 @@ public class StopsMapFragment extends Fragment {
             case R.id.action_search:
                 openSearch();
                 return true;
-            case R.id.action_settings:
-                System.out.println("Settings test");
-                // openSettings();
-                return true;
+            case R.id.action_about:
+                return false;
             default:
                 return super.onOptionsItemSelected(item);
         }

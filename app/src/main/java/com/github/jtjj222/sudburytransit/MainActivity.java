@@ -1,5 +1,6 @@
 package com.github.jtjj222.sudburytransit;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -40,8 +41,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_search:
                 // openSearch();
                 return false;
-            case R.id.action_settings:
-                // openSettings();
+            case R.id.action_about:
+                startActivity(new Intent(this, AboutActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

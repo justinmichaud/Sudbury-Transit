@@ -1,7 +1,8 @@
 Sudbury-Transit
 ---------------
 
-An unnofical, early development application that aims to provide a simple way to access information from the sudbury transit api on android, without any proprietary code.
+A simple, unofficial application that aims to provide a simple way to access bus times.
+This application is still early in development. Please report any bugs by opening an issue on github.
 
 Features
 --------
