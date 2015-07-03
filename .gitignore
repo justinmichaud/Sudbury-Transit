@@ -3,9 +3,6 @@
 *.iml
 .DS_Store
 
-#Avoid leaking api keys
-prod.xml
-
 # Built application files
 *.apk
 *.ap_
