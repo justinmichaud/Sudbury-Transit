@@ -7,10 +7,10 @@ This application is still early in development. Please report any bugs by openin
 Features
 --------
 
-![Screenshot](Original Images and Mockups/v1-1.png)
-![Screenshot](Original Images and Mockups/v1-2.png)
-![Screenshot](Original Images and Mockups/v1-3.png)
-![Screenshot](Original Images and Mockups/v1-4.png)
+![Screenshot](https://github.com/justinmichaud/Sudbury-Transit/raw/master/Original%20Images%20and%20Mockups/v1-1.png)
+![Screenshot](https://github.com/justinmichaud/Sudbury-Transit/raw/master/Original%20Images%20and%20Mockups/v1-2.png)
+![Screenshot](https://github.com/justinmichaud/Sudbury-Transit/raw/master/Original%20Images%20and%20Mockups/v1-3.png)
+![Screenshot](https://github.com/justinmichaud/Sudbury-Transit/raw/master/Original%20Images%20and%20Mockups/v1-4.png)
 
 - View realtime bus arival estimates for stops
 - View stops on a map
